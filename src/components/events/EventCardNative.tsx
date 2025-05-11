@@ -5,20 +5,14 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { GradientButtonNative } from '../shared/GradientButtonNative';
 import { format } from 'date-fns'; // For date formatting
+import type { Event } from '../../data/events'; // Import Event type from centralized location
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { AppStackParamList } from '../../navigation/MainAppNavigator'; // For navigation prop typing
 
-export interface Event {
-  id: string;
-  title: string;
-  date: string;
-  location: string;
-  category: string;
-  imageUrl?: string;
-  description?: string;
-}
 
 interface EventCardProps {
   event: Event;
-  navigation: any; // Use specific navigation type if available
+  navigation: StackNavigationProp<AppStackParamList>; 
 }
 
 export const EventCardNative: React.FC<EventCardProps> = ({ event, navigation }) => {
@@ -109,8 +103,7 @@ export const EventCardNative: React.FC<EventCardProps> = ({ event, navigation })
   });
 
   const handlePress = () => {
-    // navigation.navigate('EventDetail', { eventId: event.id });
-    console.log("Navigate to event:", event.id);
+    navigation.navigate('EventDetail', { eventId: event.id });
   };
 
   return (

@@ -6,22 +6,15 @@ import { StackNavigationProp } from '@react-navigation/stack';
 // import DateTimePickerModal from "react-native-modal-datetime-picker"; // For a better date picker experience
 
 import { useTheme } from '../../contexts/ThemeContext';
-import { EventCardNative, Event } from '../../components/events/EventCardNative';
+import { EventCardNative } from '../../components/events/EventCardNative';
 import HeaderNative from '../../components/layout/HeaderNative';
 import { GradientButtonNative } from '../../components/shared/GradientButtonNative';
-import { MainTabParamList } from '../../navigation/MainAppNavigator'; // Adjust if needed
+import { AppStackParamList } from '../../navigation/MainAppNavigator'; // For navigation prop typing
 import { format } from 'date-fns';
+import { dummyEventsData, Event } from '../../data/events'; // Import centralized data
 
-// Dummy data for events
-const dummyEvents: Event[] = [
-  { id: '1', title: 'Summer Music Fest', date: '2024-07-20T19:00:00Z', location: 'Central Park, New York', category: 'Music', imageUrl: 'https://picsum.photos/seed/summerfest/600/338', description: "Headline acts and upcoming bands." },
-  { id: '2', title: 'Tech Innovators Summit', date: '2024-08-05T09:00:00Z', location: 'Convention Center, San Francisco', category: 'Tech', imageUrl: 'https://picsum.photos/seed/techsummit/600/338', description: "Talks on AI, Blockchain, and more." },
-  { id: '3', title: 'Art & Design Expo', date: '2024-08-15T11:00:00Z', location: 'City Art Gallery, London', category: 'Art', imageUrl: 'https://picsum.photos/seed/artexpo/600/338', description: "Modern art and interactive installations." },
-  { id: '4', title: 'Local Food Fair', date: '2024-07-22T12:00:00Z', location: 'Town Square, Austin', category: 'Food', imageUrl: 'https://picsum.photos/seed/foodfair/600/338', description: "Taste the best local cuisines." },
-  { id: '5', title: 'Indie Film Night', date: '2024-09-01T20:00:00Z', location: 'Cinema Paradiso, Chicago', category: 'Film', imageUrl: 'https://picsum.photos/seed/filmnight/600/338', description: "Showcasing independent filmmakers." },
-];
 
-type EventsScreenNavigationProp = StackNavigationProp<MainTabParamList, 'Events'>;
+type EventsScreenNavigationProp = StackNavigationProp<AppStackParamList, 'MainTabs'>;
 
 interface Props {
   navigation: EventsScreenNavigationProp;
@@ -43,7 +36,7 @@ const EventsScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const filteredAndSortedEvents = useMemo(() => {
-    let events = dummyEvents.filter(event => {
+    let events = dummyEventsData.filter(event => {
       const matchesQuery = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            event.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            (event.description && event.description.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -185,7 +178,7 @@ const EventsScreen: React.FC<Props> = ({ navigation }) => {
         title="Discover Events"
         actions={
           <GradientButtonNative
-            onPress={() => navigation.navigate('CreateEventModal' as any)}
+            onPress={() => navigation.navigate('CreateEventModal', { screen: 'CreateEventForm' })}
             icon={<Feather name="plus-circle" size={18} color={theme.colors.primaryForeground} />}
             title="Create"
             style={{paddingHorizontal: 12, paddingVertical: 8}}

@@ -6,9 +6,10 @@ import { StackNavigationProp } from '@react-navigation/stack';
 
 import { useTheme } from '../../contexts/ThemeContext';
 import HeaderNative from '../../components/layout/HeaderNative';
-import { EventCardNative, Event } from '../../components/events/EventCardNative';
+import { EventCardNative } from '../../components/events/EventCardNative';
 import { GradientButtonNative } from '../../components/shared/GradientButtonNative';
-import { MainTabParamList } from '../../navigation/MainAppNavigator';
+import { AppStackParamList } from '../../navigation/MainAppNavigator';
+import { Event } from '../../data/events'; // Import centralized Event type
 
 // Dummy user data
 const userProfile = {
@@ -33,7 +34,7 @@ const dummyHostedEvents: Event[] = [
   { id: 'event_h1', title: 'Sunset Photo Walk', date: '2024-07-05', location: 'City Waterfront', category: 'Photography', imageUrl: 'https://picsum.photos/seed/hosted1/300/169' },
 ];
 
-type ProfileScreenNavigationProp = StackNavigationProp<MainTabParamList, 'Profile'>;
+type ProfileScreenNavigationProp = StackNavigationProp<AppStackParamList, 'MainTabs'>;
 
 interface Props {
   navigation: ProfileScreenNavigationProp;
@@ -152,7 +153,7 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
            <View style={styles.sectionHeader}><Feather name="heart" size={22} color={theme.colors.secondary} /><Text style={styles.sectionTitle}>Hosted Events</Text></View>
           {dummyHostedEvents.length > 0 ? dummyHostedEvents.map(event => (
             <EventCardNative key={event.id} event={event} navigation={navigation} />
-          )) : <Text style={styles.noEventsText}>You haven't hosted any events yet. <Text style={styles.createText} onPress={() => navigation.navigate('CreateEventModal' as any)}>Create one now!</Text></Text>}
+          )) : <Text style={styles.noEventsText}>You haven't hosted any events yet. <Text style={styles.createText} onPress={() => navigation.navigate('CreateEventModal', { screen: 'CreateEventForm' } )}>Create one now!</Text></Text>}
         </View>
 
         <View style={{paddingHorizontal: 16, paddingBottom: 24, paddingTop: 16}}>

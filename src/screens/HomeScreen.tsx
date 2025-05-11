@@ -6,15 +6,12 @@ import { StackNavigationProp } from '@react-navigation/stack';
 
 import { useTheme } from '../contexts/ThemeContext';
 import { GradientButtonNative } from '../components/shared/GradientButtonNative';
-import { EventCardNative, Event } from '../components/events/EventCardNative'; // Native EventCard
-import { MainTabParamList } from '../navigation/MainAppNavigator';
+import { EventCardNative } from '../components/events/EventCardNative'; // Native EventCard
+import { AppStackParamList } from '../navigation/MainAppNavigator';
 import HeaderNative from '../components/layout/HeaderNative';
+import { dummyEventsData, Event } from '../data/events'; // Import centralized data
 
-const featuredEvents: Event[] = [
-  { id: '1', title: 'Neon Nights Fest', date: '2024-08-15T20:00:00Z', location: 'Downtown Plaza', category: 'Music', imageUrl: 'https://picsum.photos/seed/neonfest/600/400', description: 'Experience the ultimate music festival with glowing lights and electrifying beats.' },
-  { id: '2', title: 'Tech Meetup Wave', date: '2024-08-20T18:30:00Z', location: 'Innovation Hub', category: 'Tech', imageUrl: 'https://picsum.photos/seed/techmeetup/600/400', description: 'Connect with tech enthusiasts and innovators in your city.' },
-  { id: '3', title: 'Wellness Weekend', date: '2024-08-25T10:00:00Z', location: 'Serene Park', category: 'Wellness', imageUrl: 'https://picsum.photos/seed/wellness/600/400', description: 'Recharge your mind and body with our wellness retreat activities.' },
-];
+const featuredEvents: Event[] = dummyEventsData.slice(0, 3); // Use first 3 from dummy data
 
 const promotedItems = [
   { id: 'promo1', title: 'VibeWave Launch Party!', imageUrl: 'https://picsum.photos/seed/launchparty/700/350', dataAiHint: "party event", description: 'Join us for the official launch!' },
@@ -24,7 +21,7 @@ const promotedItems = [
 
 const screenWidth = Dimensions.get('window').width;
 
-type HomeScreenNavigationProp = StackNavigationProp<MainTabParamList, 'Home'>;
+type HomeScreenNavigationProp = StackNavigationProp<AppStackParamList, 'MainTabs'>;
 
 interface Props {
   navigation: HomeScreenNavigationProp;
@@ -173,7 +170,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.heroButtonContainer}>
             <GradientButtonNative
               title="Explore Events"
-              onPress={() => navigation.navigate('Events')}
+              onPress={() => navigation.navigate('MainTabs', { screen: 'Events' })}
               style={styles.heroButtonStyle}
               icon={<Feather name="search" size={16} color={theme.colors.primaryForeground} />}
             />
@@ -206,12 +203,12 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.sectionTitle}>What's Happening Nearby?</Text>
           <View style={styles.eventGrid}>
             {featuredEvents.map(event => (
-              <EventCardNative key={event.id} event={event} navigation={navigation as any} />
+              <EventCardNative key={event.id} event={event} navigation={navigation} />
             ))}
           </View>
            <GradientButtonNative
               title="See All Events"
-              onPress={() => navigation.navigate('Events')}
+              onPress={() => navigation.navigate('MainTabs', { screen: 'Events' })}
               style={{marginTop: 20}}
               icon={<Feather name="arrow-right-circle" size={18} color={theme.colors.primaryForeground} />}
             />

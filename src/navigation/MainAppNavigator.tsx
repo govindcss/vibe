@@ -1,7 +1,10 @@
 
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator, BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
+import { NavigatorScreenParams, RouteProp } from '@react-navigation/native';
+
 
 import HomeScreen from '../screens/HomeScreen';
 import EventsScreen from '../screens/events/EventsScreen';
@@ -9,6 +12,7 @@ import CreateEventScreen from '../screens/events/CreateEventScreen';
 import PeopleScreen from '../screens/people/PeopleScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import ChatScreen from '../screens/chat/ChatScreen'; // Assuming ChatScreen is converted
+import EventDetailScreen from '../screens/events/EventDetailScreen'; // Import EventDetailScreen
 
 import { useTheme } from '../contexts/ThemeContext';
 import { Platform, View, StyleSheet } from 'react-native';
@@ -20,12 +24,27 @@ export type MainTabParamList = {
   CreateEventTab: undefined; // This will be the placeholder for the central button
   People: undefined;
   Profile: undefined;
-  // Chat: undefined; // Add if ChatScreen is part of tabs
+  Chat: undefined; // Add if ChatScreen is part of tabs
 };
 
-const Tab = createBottomTabNavigator<MainTabParamList>();
+export type CreateEventStackParamList = {
+ CreateEventForm: undefined;
+};
 
-const MainAppNavigator: React.FC = () => {
+export type AppStackParamList = {
+  MainTabs: NavigatorScreenParams<MainTabParamList>;
+  CreateEventModal: NavigatorScreenParams<CreateEventStackParamList>;
+  EventDetail: { eventId: string };
+  // Add other global stack screens here if needed
+};
+
+
+const Tab = createBottomTabNavigator<MainTabParamList>();
+const CreateEventStackNav = createStackNavigator<CreateEventStackParamList>();
+const AppStack = createStackNavigator<AppStackParamList>();
+
+
+const MainAppTabNavigator: React.FC = () => {
   const { theme } = useTheme();
 
   return (
@@ -42,9 +61,15 @@ const MainAppNavigator: React.FC = () => {
             iconName = 'users';
           } else if (route.name === 'Profile') {
             iconName = 'user';
-          } else {
+          } else if (route.name === 'Chat') {
+            iconName = 'message-square';
+          }
+           else {
             iconName = 'alert-circle'; // Default
           }
+          // CreateEventTab icon is handled by tabBarButton
+          if (route.name === 'CreateEventTab') return null; 
+
           return <Feather name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: theme.colors.primary,
@@ -67,18 +92,18 @@ const MainAppNavigator: React.FC = () => {
       <Tab.Screen name="Events" component={EventsScreen} />
       <Tab.Screen
         name="CreateEventTab"
-        component={CreateEventScreen} // This screen will be navigated to, but tab itself is custom
-        options={({ navigation }) => ({
+        component={CreateEventScreen} // Dummy component, actual navigation is handled by button
+        options={({ navigation }: { navigation: BottomTabNavigationProp<MainTabParamList>}) => ({
           tabBarButton: () => (
             <View style={styles.centralTabButtonContainer}>
               <GradientButtonNative
-                onPress={() => navigation.navigate('CreateEventModal')} // Navigate to a modal stack for create event
+                onPress={() => (navigation.getParent() as StackNavigationProp<AppStackParamList>).navigate('CreateEventModal', { screen: 'CreateEventForm' })}
                 style={styles.centralTabButton}
                 icon={<Feather name="plus" size={24} color={theme.colors.primaryForeground} />}
               />
             </View>
           ),
-          tabBarLabel: 'Create', // This label won't be visible due to custom button
+          tabBarLabel: 'Create', 
         })}
       />
       <Tab.Screen name="People" component={PeopleScreen} />
@@ -88,27 +113,19 @@ const MainAppNavigator: React.FC = () => {
   );
 };
 
-// Stack for CreateEvent modal
-const CreateEventStack = createStackNavigator();
-export type CreateEventStackParamList = {
- CreateEventForm: undefined;
-};
 const CreateEventModalNavigator = () => (
-  <CreateEventStack.Navigator screenOptions={{ headerShown: false, presentation: 'modal' }}>
-    <CreateEventStack.Screen name="CreateEventForm" component={CreateEventScreen} />
-  </CreateEventStack.Navigator>
+  <CreateEventStackNav.Navigator screenOptions={{ headerShown: false, presentation: 'modal' }}>
+    <CreateEventStackNav.Screen name="CreateEventForm" component={CreateEventScreen} />
+  </CreateEventStackNav.Navigator>
 );
 
-
-// Combine MainTabs and Modals
-const AppStack = createStackNavigator();
 
 const FinalMainAppNavigator = () => {
   return (
     <AppStack.Navigator screenOptions={{ headerShown: false }}>
-      <AppStack.Screen name="MainTabs" component={MainAppNavigator} />
+      <AppStack.Screen name="MainTabs" component={MainAppTabNavigator} />
       <AppStack.Screen name="CreateEventModal" component={CreateEventModalNavigator} options={{ presentation: 'modal'}} />
-      {/* Add other modal screens here, e.g., EventDetail */}
+      <AppStack.Screen name="EventDetail" component={EventDetailScreen} />
     </AppStack.Navigator>
   )
 }
@@ -119,9 +136,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    // Negative margin to pull it down a bit if desired, or use absolute positioning.
-    // This approach keeps it in flow mostly.
-    top: -15, // Pulls the button up
+    top: -15, 
   },
   centralTabButton: {
     width: 60,
