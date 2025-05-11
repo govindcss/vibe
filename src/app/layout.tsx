@@ -22,6 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark"> {/* Apply dark class to html for default dark theme */}
+      <head /> {/* Explicitly add head tag to help resolve hydration issues */}
       <body className={`${inter.variable} font-sans antialiased bg-background text-foreground`}>
         <div className="flex flex-col min-h-screen">
           <main className="flex-grow pb-20 md:pb-0"> {/* Adjust padding for bottom nav */}
