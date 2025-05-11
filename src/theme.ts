@@ -48,3 +48,7 @@ const VibeWaveColors = {
 export const defaultRadius = 12; // 0.75rem ~ 12px
 
 export default VibeWaveColors;
+
+export interface Theme {
+  primary: string;
+}
