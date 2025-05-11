@@ -15,15 +15,21 @@ export interface Person {
   imageUrl: string;
   distance?: string;
   commonEvents?: number;
+  gender?: string; // Added gender
+  location?: { // Added location
+    latitude: number;
+    longitude: number;
+  };
 }
 
 interface PersonCardProps {
   person: Person;
   onVibe?: (id: string) => void;
   onSkip?: (id: string) => void;
+  containerStyle?: object; // Added to allow custom styling for grid/list
 }
 
-export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, onSkip }) => {
+export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, onSkip, containerStyle }) => {
   const { theme } = useTheme();
 
   const styles = StyleSheet.create({
@@ -34,7 +40,6 @@ export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, on
       borderColor: theme.colors.border,
       overflow: 'hidden',
       width: '100%', // Take full width of its container
-      maxWidth: 360,
       elevation: 4, // Android shadow
       shadowColor: theme.colors.primary, // iOS shadow (subtle glow)
       shadowOffset: { width: 0, height: 0 },
@@ -42,7 +47,7 @@ export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, on
       shadowRadius: 8,
     },
     imageContainer: {
-      aspectRatio: 3 / 4, // Standard portrait card ratio
+      aspectRatio: 1, // Changed to 1 for square images, better for grid
       width: '100%',
     },
     image: {
@@ -56,10 +61,10 @@ export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, on
       bottom: 0,
       height: '40%', // Adjust gradient height
       justifyContent: 'flex-end',
-      padding: 16,
+      padding: 12, // Adjusted padding
     },
     nameAgeText: {
-      fontSize: 24,
+      fontSize: 20, // Adjusted size
       fontFamily: 'Inter-Bold',
       color: theme.colors.primaryForeground,
       textShadowColor: 'rgba(0, 0, 0, 0.75)',
@@ -67,45 +72,46 @@ export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, on
       textShadowRadius: 2,
     },
     distanceText: {
-      fontSize: 14,
+      fontSize: 12, // Adjusted size
       fontFamily: 'Inter-Regular',
       color: theme.colors.primaryForeground,
       opacity: 0.8,
     },
     content: {
-      padding: 16,
+      padding: 12, // Adjusted padding
     },
     bioText: {
-      fontSize: 14,
+      fontSize: 13, // Adjusted size
       fontFamily: 'Inter-Regular',
       color: theme.colors.mutedForeground,
-      marginBottom: 12,
-      lineHeight: 20,
-      minHeight: 60, // For approx 3 lines
+      marginBottom: 10,
+      lineHeight: 18,
+      minHeight: 36, // For approx 2 lines
     },
     interestsContainer: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 8,
-      marginBottom: 8,
+      gap: 6, // Adjusted gap
+      marginBottom: 6,
     },
     badge: {
       backgroundColor: theme.colors.secondary + '33', // secondary with opacity
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: theme.radius / 1.5,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: theme.radius / 2,
     },
     badgeText: {
-      fontSize: 12,
+      fontSize: 10, // Adjusted size
       fontFamily: 'Inter-SemiBold',
       color: theme.colors.secondary,
     },
     commonEventsContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginTop: 4, // Added margin
     },
     commonEventsText: {
-      fontSize: 13,
+      fontSize: 12, // Adjusted size
       fontFamily: 'Inter-Regular',
       color: theme.colors.accent,
       marginLeft: 4,
@@ -114,22 +120,29 @@ export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, on
       flexDirection: 'row',
       justifyContent: 'space-around',
       alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingBottom: 16, // Add padding to the bottom
-      paddingTop: 8,
+      paddingHorizontal: 12,
+      paddingBottom: 12,
+      paddingTop: 6,
     },
     actionButton: {
-      borderWidth: 2,
-      width: 64,
-      height: 64,
-      borderRadius: 32,
+      borderWidth: 1.5, // Adjusted border
+      width: 56, // Adjusted size
+      height: 56,
+      borderRadius: 28,
       justifyContent: 'center',
       alignItems: 'center',
     },
+    vibeButton: { // GradientButtonNative style prop
+        width: 60, // Adjusted size
+        height: 60,
+        borderRadius: 30,
+        paddingVertical:0,
+        paddingHorizontal:0
+    }
   });
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, containerStyle]}>
       <View style={styles.imageContainer}>
         <Image
           source={{ uri: person.imageUrl }}
@@ -147,9 +160,9 @@ export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, on
       </View>
       
       <View style={styles.content}>
-        <Text style={styles.bioText} numberOfLines={3}>{person.bio}</Text>
+        <Text style={styles.bioText} numberOfLines={2}>{person.bio}</Text>
         <View style={styles.interestsContainer}>
-          {person.interests.slice(0, 3).map(interest => (
+          {person.interests.slice(0, 2).map(interest => ( // Show fewer interests for compactness
             <View key={interest} style={styles.badge}>
               <Text style={styles.badgeText}>{interest}</Text>
             </View>
@@ -157,27 +170,29 @@ export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, on
         </View>
          {person.commonEvents && person.commonEvents > 0 && (
            <View style={styles.commonEventsContainer}>
-            <Feather name="zap" size={14} color={theme.colors.accent} />
+            <Feather name="zap" size={12} color={theme.colors.accent} />
             <Text style={styles.commonEventsText}>{person.commonEvents} event(s) in common</Text>
            </View>
         )}
       </View>
 
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.actionButton, { borderColor: theme.colors.destructive + '80' }]}
-          onPress={() => onSkip?.(person.id)}
-          aria-label="Skip"
-        >
-          <Feather name="x" size={30} color={theme.colors.destructive} />
-        </TouchableOpacity>
-        
-        <GradientButtonNative
-          onPress={() => onVibe?.(person.id)}
-          style={{ width: 70, height: 70, borderRadius: 35, paddingVertical:0, paddingHorizontal:0 }} // Make it circular
-          icon={<Feather name="heart" size={30} color={theme.colors.primaryForeground} />}
-        />
-      </View>
+      {onVibe && onSkip && ( // Only show buttons if handlers are provided (for swipe view)
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.actionButton, { borderColor: theme.colors.destructive + '80' }]}
+            onPress={() => onSkip(person.id)}
+            aria-label="Skip"
+          >
+            <Feather name="x" size={26} color={theme.colors.destructive} />
+          </TouchableOpacity>
+          
+          <GradientButtonNative
+            onPress={() => onVibe(person.id)}
+            style={styles.vibeButton}
+            icon={<Feather name="heart" size={26} color={theme.colors.primaryForeground} />}
+          />
+        </View>
+      )}
     </View>
   );
 };
