@@ -8,19 +8,20 @@ import { useTheme } from '../../contexts/ThemeContext';
 import HeaderNative from '../../components/layout/HeaderNative';
 import { PersonCardNative, Person } from '../../components/people/PersonCardNative';
 import { PeopleMapViewNative } from '../../components/people/PeopleMapViewNative';
-import { MainTabParamList } from '../../navigation/MainAppNavigator';
+import { AppStackParamList, MainTabParamList } from '../../navigation/MainAppNavigator'; // Updated import
 import { useToast } from '../../contexts/ToastContext';
 import { GradientButtonNative } from '../../components/shared/GradientButtonNative';
 
 const dummyPeople: Person[] = [
-  { id: 'p1', name: 'Jessie', age: 24, bio: 'Loves hiking, live music, and trying new cafes. Looking for adventure buddies!', interests: ['Music', 'Hiking', 'Coffee', 'Travel'], imageUrl: 'https://picsum.photos/seed/jessie/400/533', distance: '1 mile away', commonEvents: 2, gender: 'Female', location: { latitude: 34.0522, longitude: -118.2437 } },
-  { id: 'p2', name: 'Mike', age: 28, bio: 'Tech enthusiast, gamer, and foodie. Always down for a good board game night.', interests: ['Gaming', 'Tech', 'Food', 'Sci-Fi'], imageUrl: 'https://picsum.photos/seed/mike/400/533', distance: '3 miles away', gender: 'Male', location: { latitude: 34.0550, longitude: -118.2500 } },
-  { id: 'p3', name: 'Sarah', age: 22, bio: 'Art student, loves painting, photography, and exploring museums.', interests: ['Art', 'Photography', 'Museums', 'Indie Films'], imageUrl: 'https://picsum.photos/seed/sarah/400/533', distance: '0.5 miles away', commonEvents: 1, gender: 'Female', location: { latitude: 34.0500, longitude: -118.2400 } },
-  { id: 'p4', name: 'David', age: 30, bio: 'Fitness coach and travel blogger. Exploring new cultures and cuisines.', interests: ['Fitness', 'Travel', 'Food', 'Adventure'], imageUrl: 'https://picsum.photos/seed/david/400/533', distance: '2 miles away', gender: 'Male', location: { latitude: 34.0600, longitude: -118.2600 } },
-  { id: 'p5', name: 'Chloe', age: 26, bio: 'Musician and songwriter. Loves cats and vintage clothing.', interests: ['Music', 'Cats', 'Vintage', 'Concerts'], imageUrl: 'https://picsum.photos/seed/chloe/400/533', distance: '5 miles away', commonEvents: 3, gender: 'Female', location: { latitude: 34.0450, longitude: -118.2300 } },
+  { id: 'p1', name: 'Jessie', age: 24, bio: 'Loves hiking, live music, and trying new cafes. Looking for adventure buddies!', interests: ['Music', 'Hiking', 'Coffee', 'Travel'], imageUrl: 'https://picsum.photos/seed/jessie/400/533', bannerUrl: 'https://picsum.photos/seed/jessie_banner/1200/400', distance: '1 mile away', commonEvents: 2, gender: 'Female', pronouns: 'she/her', location: { latitude: 34.0522, longitude: -118.2437 }, mutualFriendsCount: 5, sharedGroupChatsCount: 1 },
+  { id: 'p2', name: 'Mike', age: 28, bio: 'Tech enthusiast, gamer, and foodie. Always down for a good board game night.', interests: ['Gaming', 'Tech', 'Food', 'Sci-Fi'], imageUrl: 'https://picsum.photos/seed/mike/400/533', bannerUrl: 'https://picsum.photos/seed/mike_banner/1200/400', distance: '3 miles away', gender: 'Male', pronouns: 'he/him', location: { latitude: 34.0550, longitude: -118.2500 }, mutualFriendsCount: 2, sharedGroupChatsCount: 0, commonEvents: 0 },
+  { id: 'p3', name: 'Sarah', age: 22, bio: 'Art student, loves painting, photography, and exploring museums.', interests: ['Art', 'Photography', 'Museums', 'Indie Films'], imageUrl: 'https://picsum.photos/seed/sarah/400/533', bannerUrl: 'https://picsum.photos/seed/sarah_banner/1200/400', distance: '0.5 miles away', commonEvents: 1, gender: 'Female', pronouns: 'she/they', location: { latitude: 34.0500, longitude: -118.2400 }, mutualFriendsCount: 8, sharedGroupChatsCount: 2 },
+  { id: 'p4', name: 'David', age: 30, bio: 'Fitness coach and travel blogger. Exploring new cultures and cuisines.', interests: ['Fitness', 'Travel', 'Food', 'Adventure'], imageUrl: 'https://picsum.photos/seed/david/400/533', bannerUrl: 'https://picsum.photos/seed/david_banner/1200/400', distance: '2 miles away', gender: 'Male', pronouns: 'he/him', location: { latitude: 34.0600, longitude: -118.2600 }, mutualFriendsCount: 3, sharedGroupChatsCount: 1, commonEvents: 1 },
+  { id: 'p5', name: 'Chloe', age: 26, bio: 'Musician and songwriter. Loves cats and vintage clothing.', interests: ['Music', 'Cats', 'Vintage', 'Concerts'], imageUrl: 'https://picsum.photos/seed/chloe/400/533', bannerUrl: 'https://picsum.photos/seed/chloe_banner/1200/400', distance: '5 miles away', commonEvents: 3, gender: 'Female', pronouns: 'any/all', location: { latitude: 34.0450, longitude: -118.2300 }, mutualFriendsCount: 12, sharedGroupChatsCount: 3 },
 ];
+export { dummyPeople }; // Export for OtherUserProfileScreen to use
 
-type PeopleScreenNavigationProp = StackNavigationProp<MainTabParamList, 'People'>;
+type PeopleScreenNavigationProp = StackNavigationProp<AppStackParamList, 'MainTabs'>; // Updated to AppStackParamList
 type ViewMode = 'swipe' | 'grid' | 'map';
 
 interface Props {
@@ -28,7 +29,7 @@ interface Props {
 }
 
 const PeopleScreen: React.FC<Props> = ({ navigation }) => {
-  const { theme } = useTheme();
+  const { theme } } = useTheme();
   const { showToast } = useToast();
   
   const [peopleList, setPeopleList] = useState<Person[]>(dummyPeople);
@@ -76,12 +77,15 @@ const PeopleScreen: React.FC<Props> = ({ navigation }) => {
       const matchesDistance = distanceFilter ? (parseFloat(person.distance || "999") <= parseFloat(distanceFilter)) : true;
       const matchesGender = genderFilter ? person.gender?.toLowerCase() === genderFilter.toLowerCase() : true;
       const matchesInterest = interestFilter ? person.interests.some(interest => interest.toLowerCase().includes(interestFilter.toLowerCase())) : true;
-      // Add attending event filter logic if data supports it
       return matchesDistance && matchesGender && matchesInterest;
     });
   }, [peopleList, distanceFilter, genderFilter, interestFilter]);
 
   const currentPersonForSwipe = filteredPeople[currentIndex];
+
+  const navigateToUserProfile = (personId: string) => {
+    navigation.navigate('OtherUserProfile', { personId });
+  };
 
   const renderHeaderActions = () => (
     <View style={styles.headerActionsContainer}>
@@ -102,7 +106,7 @@ const PeopleScreen: React.FC<Props> = ({ navigation }) => {
   
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.colors.background },
-    filtersScrollView: { maxHeight: Platform.OS === 'ios' ? 180 : 200 }, // Max height for filter section
+    filtersScrollView: { maxHeight: Platform.OS === 'ios' ? 180 : 200 }, 
     filtersContainer: {
       padding: 12,
       backgroundColor: theme.colors.card,
@@ -124,7 +128,7 @@ const PeopleScreen: React.FC<Props> = ({ navigation }) => {
     contentContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: viewMode === 'grid' ? 8 : 16, },
     swipeCardContainer: { width: '100%', maxWidth: 360, alignItems: 'center' },
     gridContainer: { flex: 1, width: '100%' },
-    gridItem: { flex: 1/2, margin: 4, maxWidth: '48%' }, // For 2 columns
+    gridItem: { flex: 1/2, margin: 4, maxWidth: '48%' }, 
     noPeopleContainer: { alignItems: 'center', justifyContent: 'center', padding: 20, flex: 1 },
     noPeopleText: { fontSize: 18, color: theme.colors.mutedForeground, fontFamily: 'Inter-Regular', marginBottom: 16, textAlign: 'center' },
     swipeHint: { textAlign: 'center', fontSize: 12, color: theme.colors.mutedForeground, marginTop: 16, fontFamily: 'Inter-Regular' },
@@ -136,7 +140,7 @@ const PeopleScreen: React.FC<Props> = ({ navigation }) => {
       bottom: 20,
       left: 20,
       right: 20,
-      backgroundColor: theme.colors.card + 'E6', // semi-transparent
+      backgroundColor: theme.colors.card + 'E6', 
       padding: 12,
       borderRadius: theme.radius,
       flexDirection: 'row',
@@ -166,7 +170,7 @@ const PeopleScreen: React.FC<Props> = ({ navigation }) => {
                 <TextInput style={styles.filterInput} placeholder="Interest (e.g., Music)" value={interestFilter} onChangeText={setInterestFilter} placeholderTextColor={theme.colors.mutedForeground}/>
                  <GradientButtonNative
                     title="Apply"
-                    onPress={() => { /* Filtering is live via useMemo, this button can trigger re-fetch or just confirm */ setCurrentIndex(0); showToast({message: "Filters applied", type: "info"})}}
+                    onPress={() => { setCurrentIndex(0); showToast({message: "Filters applied", type: "info"})}}
                     style={styles.applyButton}
                     textStyle={{fontSize: 14}}
                 />
@@ -181,8 +185,9 @@ const PeopleScreen: React.FC<Props> = ({ navigation }) => {
                   person={currentPersonForSwipe}
                   onVibe={handleVibe}
                   onSkip={handleSkip}
+                  onPress={navigateToUserProfile}
                 />
-                <Text style={styles.swipeHint}>Interact with the buttons below the card.</Text>
+                <Text style={styles.swipeHint}>Tap card to view full profile. Use buttons to interact.</Text>
                 {filteredPeople.length > 0 && (
                     <Text style={styles.statsText}>
                         Showing profile {currentIndex + 1} of {filteredPeople.length}
@@ -204,7 +209,7 @@ const PeopleScreen: React.FC<Props> = ({ navigation }) => {
               data={filteredPeople}
               renderItem={({ item }) => (
                 <View style={styles.gridItem}>
-                  <PersonCardNative person={item} containerStyle={{marginBottom: 8}} />
+                  <PersonCardNative person={item} containerStyle={{marginBottom: 8}} onPress={navigateToUserProfile} />
                 </View>
               )}
               keyExtractor={item => item.id}
@@ -223,7 +228,7 @@ const PeopleScreen: React.FC<Props> = ({ navigation }) => {
         {viewMode === 'map' && (
           <View style={{flex: 1}}>
             <PeopleMapViewNative 
-                people={filteredPeople.filter(p => p.location)} // Only pass people with location
+                people={filteredPeople.filter(p => p.location)} 
                 showUserLocation={showUserOnMap} 
             />
             <View style={styles.mapViewToggleContainer}>

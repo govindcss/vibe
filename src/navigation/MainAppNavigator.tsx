@@ -11,20 +11,21 @@ import EventsScreen from '../screens/events/EventsScreen';
 import CreateEventScreen from '../screens/events/CreateEventScreen';
 import PeopleScreen from '../screens/people/PeopleScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
-import ChatScreen from '../screens/chat/ChatScreen'; // Assuming ChatScreen is converted
-import EventDetailScreen from '../screens/events/EventDetailScreen'; // Import EventDetailScreen
+import ChatScreen from '../screens/chat/ChatScreen';
+import EventDetailScreen from '../screens/events/EventDetailScreen';
+import OtherUserProfileScreen from '../screens/profile/OtherUserProfileScreen'; // Import OtherUserProfileScreen
 
 import { useTheme } from '../contexts/ThemeContext';
 import { Platform, View, StyleSheet } from 'react-native';
-import { GradientButtonNative } from '../components/shared/GradientButtonNative'; // For the central button
+import { GradientButtonNative } from '../components/shared/GradientButtonNative';
 
 export type MainTabParamList = {
   Home: undefined;
   Events: undefined;
-  CreateEventTab: undefined; // This will be the placeholder for the central button
+  CreateEventTab: undefined; 
   People: undefined;
   Profile: undefined;
-  Chat: undefined; // Add if ChatScreen is part of tabs
+  Chat: { userId?: string } | undefined; // Added optional userId for direct messaging
 };
 
 export type CreateEventStackParamList = {
@@ -35,7 +36,7 @@ export type AppStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   CreateEventModal: NavigatorScreenParams<CreateEventStackParamList>;
   EventDetail: { eventId: string };
-  // Add other global stack screens here if needed
+  OtherUserProfile: { personId: string }; // Added OtherUserProfile
 };
 
 
@@ -65,9 +66,9 @@ const MainAppTabNavigator: React.FC = () => {
             iconName = 'message-square';
           }
            else {
-            iconName = 'alert-circle'; // Default
+            iconName = 'alert-circle'; 
           }
-          // CreateEventTab icon is handled by tabBarButton
+          
           if (route.name === 'CreateEventTab') return null; 
 
           return <Feather name={iconName} size={size} color={color} />;
@@ -80,7 +81,7 @@ const MainAppTabNavigator: React.FC = () => {
           height: Platform.OS === 'ios' ? 90 : 70,
           paddingBottom: Platform.OS === 'ios' ? 30 : 10,
         },
-        headerShown: false, // Headers will be handled by individual screens or custom components
+        headerShown: false, 
         tabBarShowLabel: true,
         tabBarLabelStyle: {
           fontFamily: 'Inter-Regular',
@@ -92,7 +93,7 @@ const MainAppTabNavigator: React.FC = () => {
       <Tab.Screen name="Events" component={EventsScreen} />
       <Tab.Screen
         name="CreateEventTab"
-        component={CreateEventScreen} // Dummy component, actual navigation is handled by button
+        component={CreateEventScreen} 
         options={({ navigation }: { navigation: BottomTabNavigationProp<MainTabParamList>}) => ({
           tabBarButton: () => (
             <View style={styles.centralTabButtonContainer}>
@@ -107,8 +108,8 @@ const MainAppTabNavigator: React.FC = () => {
         })}
       />
       <Tab.Screen name="People" component={PeopleScreen} />
+      <Tab.Screen name="Chat" component={ChatScreen} /> 
       <Tab.Screen name="Profile" component={ProfileScreen} />
-      {/* <Tab.Screen name="Chat" component={ChatScreen} /> */}
     </Tab.Navigator>
   );
 };
@@ -126,6 +127,7 @@ const FinalMainAppNavigator = () => {
       <AppStack.Screen name="MainTabs" component={MainAppTabNavigator} />
       <AppStack.Screen name="CreateEventModal" component={CreateEventModalNavigator} options={{ presentation: 'modal'}} />
       <AppStack.Screen name="EventDetail" component={EventDetailScreen} />
+      <AppStack.Screen name="OtherUserProfile" component={OtherUserProfileScreen} />
     </AppStack.Navigator>
   )
 }

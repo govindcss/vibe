@@ -12,25 +12,36 @@ export interface Person {
   age: number;
   bio: string;
   interests: string[];
-  imageUrl: string;
+  imageUrl: string; // Avatar URL
+  bannerUrl?: string; // Banner image URL for profile page
   distance?: string;
-  commonEvents?: number;
-  gender?: string; // Added gender
-  location?: { // Added location
+  commonEvents?: number; // Count of mutual/common events
+  gender?: string;
+  pronouns?: string;
+  location?: {
     latitude: number;
     longitude: number;
   };
+  mutualFriendsCount?: number;
+  sharedGroupChatsCount?: number;
 }
 
 interface PersonCardProps {
   person: Person;
   onVibe?: (id: string) => void;
   onSkip?: (id: string) => void;
-  containerStyle?: object; // Added to allow custom styling for grid/list
+  onPress?: (id: string) => void; // For navigating to full profile from grid/list
+  containerStyle?: object;
 }
 
-export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, onSkip, containerStyle }) => {
+export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, onSkip, onPress, containerStyle }) => {
   const { theme } = useTheme();
+
+  const handleCardPress = () => {
+    if (onPress) {
+      onPress(person.id);
+    }
+  };
 
   const styles = StyleSheet.create({
     card: {
@@ -142,57 +153,59 @@ export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, on
   });
 
   return (
-    <View style={[styles.card, containerStyle]}>
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: person.imageUrl }}
-          style={styles.image}
-          resizeMode="cover"
-          data-ai-hint="person portrait lifestyle"
-        />
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.8)']}
-          style={styles.gradientOverlay}
-        >
-          <Text style={styles.nameAgeText}>{person.name}, {person.age}</Text>
-          {person.distance && <Text style={styles.distanceText}>{person.distance}</Text>}
-        </LinearGradient>
-      </View>
-      
-      <View style={styles.content}>
-        <Text style={styles.bioText} numberOfLines={2}>{person.bio}</Text>
-        <View style={styles.interestsContainer}>
-          {person.interests.slice(0, 2).map(interest => ( // Show fewer interests for compactness
-            <View key={interest} style={styles.badge}>
-              <Text style={styles.badgeText}>{interest}</Text>
+    <TouchableOpacity onPress={handleCardPress} activeOpacity={onPress ? 0.7 : 1}>
+        <View style={[styles.card, containerStyle]}>
+        <View style={styles.imageContainer}>
+            <Image
+            source={{ uri: person.imageUrl }}
+            style={styles.image}
+            resizeMode="cover"
+            data-ai-hint="person portrait lifestyle"
+            />
+            <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.8)']}
+            style={styles.gradientOverlay}
+            >
+            <Text style={styles.nameAgeText}>{person.name}, {person.age}</Text>
+            {person.distance && <Text style={styles.distanceText}>{person.distance}</Text>}
+            </LinearGradient>
+        </View>
+        
+        <View style={styles.content}>
+            <Text style={styles.bioText} numberOfLines={2}>{person.bio}</Text>
+            <View style={styles.interestsContainer}>
+            {person.interests.slice(0, 2).map(interest => ( // Show fewer interests for compactness
+                <View key={interest} style={styles.badge}>
+                <Text style={styles.badgeText}>{interest}</Text>
+                </View>
+            ))}
             </View>
-          ))}
+            {person.commonEvents && person.commonEvents > 0 && (
+            <View style={styles.commonEventsContainer}>
+                <Feather name="zap" size={12} color={theme.colors.accent} />
+                <Text style={styles.commonEventsText}>{person.commonEvents} event(s) in common</Text>
+            </View>
+            )}
         </View>
-         {person.commonEvents && person.commonEvents > 0 && (
-           <View style={styles.commonEventsContainer}>
-            <Feather name="zap" size={12} color={theme.colors.accent} />
-            <Text style={styles.commonEventsText}>{person.commonEvents} event(s) in common</Text>
-           </View>
-        )}
-      </View>
 
-      {onVibe && onSkip && ( // Only show buttons if handlers are provided (for swipe view)
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={[styles.actionButton, { borderColor: theme.colors.destructive + '80' }]}
-            onPress={() => onSkip(person.id)}
-            aria-label="Skip"
-          >
-            <Feather name="x" size={26} color={theme.colors.destructive} />
-          </TouchableOpacity>
-          
-          <GradientButtonNative
-            onPress={() => onVibe(person.id)}
-            style={styles.vibeButton}
-            icon={<Feather name="heart" size={26} color={theme.colors.primaryForeground} />}
-          />
+        {onVibe && onSkip && ( // Only show buttons if handlers are provided (for swipe view)
+            <View style={styles.footer}>
+            <TouchableOpacity
+                style={[styles.actionButton, { borderColor: theme.colors.destructive + '80' }]}
+                onPress={() => onSkip(person.id)}
+                aria-label="Skip"
+            >
+                <Feather name="x" size={26} color={theme.colors.destructive} />
+            </TouchableOpacity>
+            
+            <GradientButtonNative
+                onPress={() => onVibe(person.id)}
+                style={styles.vibeButton}
+                icon={<Feather name="heart" size={26} color={theme.colors.primaryForeground} />}
+            />
+            </View>
+        )}
         </View>
-      )}
-    </View>
+    </TouchableOpacity>
   );
 };
