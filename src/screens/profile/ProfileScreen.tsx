@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Platform, Switch } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Platform, Switch, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { StackNavigationProp } from '@react-navigation/stack';
 
@@ -46,6 +46,19 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { theme } = useTheme();
   const { showToast } = useToast();
   const [isProfilePublic, setIsProfilePublic] = useState(true);
+  const [isLocationShared, setIsLocationShared] = useState(true); // New state for location sharing
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+        "Delete Account",
+        "Are you sure you want to delete your account? This action cannot be undone.",
+        [
+            { text: "Cancel", style: "cancel" },
+            { text: "Delete", style: "destructive", onPress: () => showToast({ message: "Account deletion process initiated (demo).", type: "warning" }) }
+        ]
+    );
+  };
+
 
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.colors.background },
@@ -81,36 +94,50 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     statValue: { fontSize: 22, fontFamily: 'Inter-Bold', color: theme.colors.primary },
     statLabel: { fontSize: 12, fontFamily: 'Inter-Regular', color: theme.colors.mutedForeground, marginTop: 2 },
     sectionContainer: { paddingHorizontal: 16, marginBottom: 24 },
-    sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+    sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 }, // Reduced margin
     sectionTitle: { fontSize: 20, fontFamily: 'Inter-Bold', color: theme.colors.foreground, marginLeft: 8 },
     noEventsText: { color: theme.colors.mutedForeground, fontFamily: 'Inter-Regular', fontSize: 15 },
     createText: { color: theme.colors.primary, textDecorationLine: 'underline'},
-    actionButton: {
-      borderWidth: 1, borderColor: theme.colors.muted, borderRadius: theme.radius,
-      paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', marginBottom: 12,
-    },
-    actionButtonText: { color: theme.colors.foreground, fontFamily: 'Inter-SemiBold', fontSize: 16, marginLeft: 8 },
-    logoutButton: { backgroundColor: theme.colors.destructive + 'CC' }, // Destructive with opacity
-    logoutButtonText: { color: theme.colors.destructiveForeground },
-    privacySettingItem: {
+    
+    // Styles for existing action buttons and new "Settings & More"
+    settingItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 12,
+        paddingVertical: 14, // Consistent padding
         borderBottomWidth: 1,
         borderBottomColor: theme.colors.border + '80',
     },
-    privacySettingText: {
+    settingItemContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1, // Allow text content to take available space
+    },
+    settingIcon: {
+        marginRight: 12,
+    },
+    settingText: {
         fontSize: 16,
         fontFamily: 'Inter-Regular',
         color: theme.colors.foreground,
     },
-    privacySettingDescription: {
+    settingDescription: {
         fontSize: 12,
         fontFamily: 'Inter-Regular',
         color: theme.colors.mutedForeground,
         marginTop: 2,
-    }
+    },
+    actionButton: { // Used for Moderation, Logout, Delete
+      borderWidth: 1, borderColor: theme.colors.muted, borderRadius: theme.radius,
+      paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', marginBottom: 12,
+    },
+    actionButtonText: { color: theme.colors.foreground, fontFamily: 'Inter-SemiBold', fontSize: 16, marginLeft: 8 },
+    
+    logoutButton: { backgroundColor: theme.colors.card, borderColor: theme.colors.destructive }, 
+    logoutButtonText: { color: theme.colors.destructive },
+
+    deleteAccountButton: { backgroundColor: theme.colors.destructive, borderColor: theme.colors.destructive },
+    deleteAccountButtonText: { color: theme.colors.destructiveForeground },
   });
 
   return (
@@ -118,7 +145,7 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       <HeaderNative
         title="My Profile"
         actions={
-          <TouchableOpacity onPress={() => showToast({message: "Settings coming soon!"})} style={{ padding: 8 }}>
+          <TouchableOpacity onPress={() => showToast({message: "General app settings coming soon!"})} style={{ padding: 8 }}>
             <Feather name="settings" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
         }
@@ -167,12 +194,18 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.statItem}><Text style={[styles.statValue, {color: theme.colors.accent}]}>{userProfile.vibesReceived}</Text><Text style={styles.statLabel}>Vibes Received</Text></View>
         </View>
         
+        {/* Combined Settings Section */}
         <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}><Feather name="eye" size={22} color={theme.colors.primary} /><Text style={styles.sectionTitle}>Privacy Settings</Text></View>
-          <View style={styles.privacySettingItem}>
-            <View>
-                <Text style={styles.privacySettingText}>Public Profile Visibility</Text>
-                <Text style={styles.privacySettingDescription}>Allow anyone to find and view your profile.</Text>
+          <View style={styles.sectionHeader}><Feather name="sliders" size={22} color={theme.colors.primary} /><Text style={styles.sectionTitle}>Settings & Preferences</Text></View>
+          
+          {/* Profile Visibility */}
+          <View style={styles.settingItem}>
+            <View style={styles.settingItemContent}>
+                <Feather name="eye" size={18} color={theme.colors.foreground} style={styles.settingIcon} />
+                <View>
+                    <Text style={styles.settingText}>Public Profile Visibility</Text>
+                    <Text style={styles.settingDescription}>Allow anyone to find and view your profile.</Text>
+                </View>
             </View>
             <Switch
                 trackColor={{ false: theme.colors.muted, true: theme.colors.primary }}
@@ -182,14 +215,53 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                 value={isProfilePublic}
             />
           </View>
-          <TouchableOpacity style={styles.privacySettingItem} onPress={() => showToast({message: "QR Code sharing coming soon!"})}>
-            <View>
-                <Text style={styles.privacySettingText}>Share Profile via QR Code</Text>
-                <Text style={styles.privacySettingDescription}>Generate a QR code for others to scan.</Text>
+
+          {/* Location Sharing */}
+          <View style={styles.settingItem}>
+            <View style={styles.settingItemContent}>
+                <Feather name="map-pin" size={18} color={theme.colors.foreground} style={styles.settingIcon} />
+                <View>
+                    <Text style={styles.settingText}>Location Sharing</Text>
+                    <Text style={styles.settingDescription}>Enable for nearby events and people.</Text>
+                </View>
+            </View>
+            <Switch
+                trackColor={{ false: theme.colors.muted, true: theme.colors.primary }}
+                thumbColor={isLocationShared ? theme.colors.primaryForeground : theme.colors.mutedForeground}
+                ios_backgroundColor={theme.colors.muted}
+                onValueChange={setIsLocationShared}
+                value={isLocationShared}
+            />
+          </View>
+          
+          {/* Notification Preferences */}
+          <TouchableOpacity style={styles.settingItem} onPress={() => showToast({message: "Notification Preferences coming soon!"})}>
+            <View style={styles.settingItemContent}>
+                <Feather name="bell" size={18} color={theme.colors.foreground} style={styles.settingIcon} />
+                <Text style={styles.settingText}>Notification Preferences</Text>
+            </View>
+            <Feather name="chevron-right" size={22} color={theme.colors.mutedForeground} />
+          </TouchableOpacity>
+          
+          {/* Blocked/Reported Users */}
+          <TouchableOpacity style={styles.settingItem} onPress={() => showToast({message: "Manage Blocked/Reported Users coming soon!"})}>
+            <View style={styles.settingItemContent}>
+                <Feather name="user-x" size={18} color={theme.colors.foreground} style={styles.settingIcon} />
+                <Text style={styles.settingText}>Blocked & Reported Users</Text>
+            </View>
+            <Feather name="chevron-right" size={22} color={theme.colors.mutedForeground} />
+          </TouchableOpacity>
+          
+          {/* Profile Sharing QR */}
+          <TouchableOpacity style={styles.settingItem} onPress={() => showToast({message: "QR Code sharing coming soon!"})}>
+            <View style={styles.settingItemContent}>
+                <Feather name="share-2" size={18} color={theme.colors.foreground} style={styles.settingIcon} />
+                <Text style={styles.settingText}>Share Profile via QR Code</Text>
             </View>
             <Feather name="chevron-right" size={22} color={theme.colors.mutedForeground} />
           </TouchableOpacity>
         </View>
+
 
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}><Feather name="calendar" size={22} color={theme.colors.secondary} /><Text style={styles.sectionTitle}>Joined Events</Text></View>
@@ -199,20 +271,52 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <View style={styles.sectionContainer}>
-           <View style={styles.sectionHeader}><Feather name="heart" size={22} color={theme.colors.accent} /><Text style={styles.sectionTitle}>Hosted Events</Text></View>
+           <View style={styles.sectionHeader}><Feather name="star" size={22} color={theme.colors.accent} /><Text style={styles.sectionTitle}>Hosted Events</Text></View>
           {dummyHostedEvents.length > 0 ? dummyHostedEvents.map(event => (
             <EventCardNative key={event.id} event={event} navigation={navigation} />
           )) : <Text style={styles.noEventsText}>You haven't hosted any events yet. <Text style={styles.createText} onPress={() => navigation.navigate('CreateEventModal', { screen: 'CreateEventForm' } )}>Create one now!</Text></Text>}
         </View>
 
-        <View style={{paddingHorizontal: 16, paddingBottom: 24, paddingTop: 16}}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => showToast({message: "Moderation & Safety coming soon!"})}>
-            <Feather name="shield" size={18} color={theme.colors.foreground} />
-            <Text style={styles.actionButtonText}>Moderation & Safety</Text>
+        {/* Legal & Support Section */}
+        <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}><Feather name="help-circle" size={22} color={theme.colors.primary} /><Text style={styles.sectionTitle}>Support & Legal</Text></View>
+            <TouchableOpacity style={styles.settingItem} onPress={() => showToast({message: "Community Guidelines coming soon!"})}>
+                <View style={styles.settingItemContent}>
+                    <Feather name="book-open" size={18} color={theme.colors.foreground} style={styles.settingIcon} />
+                    <Text style={styles.settingText}>Community Guidelines</Text>
+                </View>
+                <Feather name="chevron-right" size={22} color={theme.colors.mutedForeground} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingItem} onPress={() => showToast({message: "Terms of Use coming soon!"})}>
+                <View style={styles.settingItemContent}>
+                    <Feather name="file-text" size={18} color={theme.colors.foreground} style={styles.settingIcon} />
+                    <Text style={styles.settingText}>Terms of Use</Text>
+                </View>
+                <Feather name="chevron-right" size={22} color={theme.colors.mutedForeground} />
+            </TouchableOpacity>
+             <TouchableOpacity style={styles.settingItem} onPress={() => showToast({message: "Privacy Policy coming soon!"})}>
+                <View style={styles.settingItemContent}>
+                    <Feather name="shield" size={18} color={theme.colors.foreground} style={styles.settingIcon} />
+                    <Text style={styles.settingText}>Privacy Policy</Text>
+                </View>
+                <Feather name="chevron-right" size={22} color={theme.colors.mutedForeground} />
+            </TouchableOpacity>
+        </View>
+
+        <View style={{paddingHorizontal: 16, paddingBottom: 30, paddingTop: 16}}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => showToast({message: "Moderation & Safety tools coming soon!"})}>
+            <Feather name="shield-alert" size={18} color={theme.colors.foreground} />
+            <Text style={styles.actionButtonText}>Safety Center</Text>
           </TouchableOpacity>
+          
           <TouchableOpacity style={[styles.actionButton, styles.logoutButton]} onPress={() => showToast({message: "Logging out...", type:"info"})}>
-            <Feather name="log-out" size={18} color={theme.colors.destructiveForeground} />
+            <Feather name="log-out" size={18} color={theme.colors.destructive} />
             <Text style={[styles.actionButtonText, styles.logoutButtonText]}>Log Out</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.actionButton, styles.deleteAccountButton]} onPress={handleDeleteAccount}>
+            <Feather name="trash-2" size={18} color={theme.colors.destructiveForeground} />
+            <Text style={[styles.actionButtonText, styles.deleteAccountButtonText]}>Delete Account</Text>
           </TouchableOpacity>
         </View>
 
