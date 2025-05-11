@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import { GradientButton } from '@/components/shared/GradientButton';
 import { CalendarDays, MapPin, Tag } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export interface Event {
   id: string;
@@ -22,6 +23,20 @@ interface EventCardProps {
 }
 
 export function EventCard({ event }: EventCardProps) {
+  const [formattedDate, setFormattedDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (event.date) {
+      try {
+        setFormattedDate(new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
+      } catch (error) {
+        console.error("Error formatting date:", error);
+        // Fallback or keep as null if date is invalid
+        setFormattedDate("Invalid date");
+      }
+    }
+  }, [event.date]);
+
   return (
     <Card className="overflow-hidden shadow-soft hover:shadow-glow-primary transition-shadow duration-300 flex flex-col h-full bg-card border-border">
       <CardHeader className="p-0 relative">
@@ -46,7 +61,7 @@ export function EventCard({ event }: EventCardProps) {
         <div className="space-y-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <CalendarDays className="w-4 h-4 text-secondary" />
-            <span>{new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            <span>{formattedDate || 'Loading date...'}</span>
           </div>
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-secondary" />

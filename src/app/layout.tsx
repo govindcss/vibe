@@ -22,7 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark"><head />
+    <html lang="en" className="dark">
+      <head />
       <body className={`${inter.variable} font-sans antialiased bg-background text-foreground`}>
         <div className="flex flex-col min-h-screen">
           <main className="flex-grow pb-20 md:pb-0">
