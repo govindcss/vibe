@@ -1,10 +1,13 @@
 
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons'; // Assuming Feather icons
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../contexts/ThemeContext';
 import { GradientButtonNative } from '../shared/GradientButtonNative'; // Using the native gradient button
+import type { Event } from '../../data/events'; // For shared events lookup
+import { dummyEventsData } from '../../data/events'; // For shared events lookup (simplification for demo)
+import { useToast } from '../../contexts/ToastContext';
 
 export interface Person {
   id: string;
@@ -13,11 +16,15 @@ export interface Person {
   bio: string;
   interests: string[];
   imageUrl: string; // Avatar URL
+  secondaryImageUrls?: string[]; // Optional secondary images
   bannerUrl?: string; // Banner image URL for profile page
   distance?: string;
-  commonEvents?: number; // Count of mutual/common events
+  commonEvents?: number; // Count of mutual/common events (already present)
+  sharedUpcomingEventIds?: string[]; // IDs of events the person is attending
+  vibeTags?: string[]; // e.g., ["🔥 Raver", "🎵 Techno"]
+  isVerified?: boolean;
   gender?: string;
-  pronouns?: string;
+  pronouns?: string; // Already exists
   location?: {
     latitude: number;
     longitude: number;
@@ -31,11 +38,13 @@ interface PersonCardProps {
   onVibe?: (id: string) => void;
   onSkip?: (id: string) => void;
   onPress?: (id: string) => void; // For navigating to full profile from grid/list
+  onSaveForLater?: (id: string) => void; // New action
   containerStyle?: object;
 }
 
-export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, onSkip, onPress, containerStyle }) => {
+export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, onSkip, onPress, onSaveForLater, containerStyle }) => {
   const { theme } = useTheme();
+  const { showToast } = useToast();
 
   const handleCardPress = () => {
     if (onPress) {
@@ -43,118 +52,191 @@ export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, on
     }
   };
 
+  const getSharedEventTitles = () => {
+    if (!person.sharedUpcomingEventIds || person.sharedUpcomingEventIds.length === 0) {
+      return [];
+    }
+    return person.sharedUpcomingEventIds
+      .map(eventId => dummyEventsData.find(event => event.id === eventId)?.title)
+      .filter(Boolean) as string[];
+  };
+
+  const sharedEventTitles = getSharedEventTitles();
+
+  const handleMoreOptions = () => {
+    Alert.alert(
+      "Options",
+      `What would you like to do with ${person.name}'s profile?`,
+      [
+        { text: "Report User", onPress: () => showToast({ type: 'warning', title: 'Reported', message: `${person.name} has been reported.`}) },
+        { text: "Block User", onPress: () => showToast({ type: 'warning', title: 'Blocked', message: `${person.name} has been blocked.`}) },
+        { text: "Cancel", style: "cancel" }
+      ]
+    );
+  };
+
   const styles = StyleSheet.create({
     card: {
       backgroundColor: theme.colors.card,
-      borderRadius: theme.radius,
+      borderRadius: theme.radius * 1.5, // More rounded for swipe card feel
       borderWidth: 1,
       borderColor: theme.colors.border,
       overflow: 'hidden',
-      width: '100%', // Take full width of its container
-      elevation: 4, // Android shadow
-      shadowColor: theme.colors.primary, // iOS shadow (subtle glow)
-      shadowOffset: { width: 0, height: 0 },
+      width: '100%', 
+      elevation: 4, 
+      shadowColor: theme.colors.primary, 
+      shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.2,
-      shadowRadius: 8,
+      shadowRadius: 10,
     },
     imageContainer: {
-      aspectRatio: 1, // Changed to 1 for square images, better for grid
+      aspectRatio: 3 / 4, // Common aspect ratio for profile cards
       width: '100%',
+      position: 'relative',
     },
     image: {
       width: '100%',
       height: '100%',
+    },
+    verifiedBadge: {
+      position: 'absolute',
+      top: 10,
+      right: 10,
+      backgroundColor: theme.colors.secondary,
+      borderRadius: 12,
+      padding: 5,
+    },
+    moreOptionsButton: {
+      position: 'absolute',
+      top: 10,
+      left: 10,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      borderRadius: 15,
+      padding: 5,
     },
     gradientOverlay: {
       position: 'absolute',
       left: 0,
       right: 0,
       bottom: 0,
-      height: '40%', // Adjust gradient height
+      height: '50%', 
       justifyContent: 'flex-end',
-      padding: 12, // Adjusted padding
+      padding: 16, 
     },
     nameAgeText: {
-      fontSize: 20, // Adjusted size
+      fontSize: 24, 
       fontFamily: 'Inter-Bold',
       color: theme.colors.primaryForeground,
       textShadowColor: 'rgba(0, 0, 0, 0.75)',
       textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 2,
+      textShadowRadius: 3,
+    },
+    pronounsText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: theme.colors.primaryForeground,
+      opacity: 0.8,
+      fontStyle: 'italic',
     },
     distanceText: {
-      fontSize: 12, // Adjusted size
+      fontSize: 13, 
       fontFamily: 'Inter-Regular',
       color: theme.colors.primaryForeground,
       opacity: 0.8,
     },
     content: {
-      padding: 12, // Adjusted padding
+      padding: 16, 
     },
     bioText: {
-      fontSize: 13, // Adjusted size
+      fontSize: 14, 
       fontFamily: 'Inter-Regular',
       color: theme.colors.mutedForeground,
       marginBottom: 10,
-      lineHeight: 18,
-      minHeight: 36, // For approx 2 lines
+      lineHeight: 20,
+      minHeight: 40, 
     },
-    interestsContainer: {
+    tagsContainer: { // For interests and vibe tags
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 6, // Adjusted gap
-      marginBottom: 6,
+      gap: 8, 
+      marginBottom: 8,
     },
-    badge: {
-      backgroundColor: theme.colors.secondary + '33', // secondary with opacity
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: theme.radius / 2,
+    interestBadge: {
+      backgroundColor: theme.colors.secondary + '33', 
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: theme.radius / 1.5,
     },
-    badgeText: {
-      fontSize: 10, // Adjusted size
+    interestBadgeText: {
+      fontSize: 11, 
       fontFamily: 'Inter-SemiBold',
       color: theme.colors.secondary,
     },
-    commonEventsContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 4, // Added margin
+    vibeTagBadge: {
+      backgroundColor: theme.colors.accent + '33',
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: theme.radius / 1.5,
     },
-    commonEventsText: {
-      fontSize: 12, // Adjusted size
-      fontFamily: 'Inter-Regular',
-      color: theme.colors.accent,
-      marginLeft: 4,
+    vibeTagText: {
+        fontSize: 11,
+        fontFamily: 'Inter-SemiBold',
+        color: theme.colors.accent,
+    },
+    sharedEventsContainer: {
+        marginTop: 8,
+    },
+    sharedEventsTitle: {
+        fontSize: 13,
+        fontFamily: 'Inter-SemiBold',
+        color: theme.colors.primary,
+        marginBottom: 4,
+    },
+    sharedEventText: {
+        fontSize: 12,
+        fontFamily: 'Inter-Regular',
+        color: theme.colors.mutedForeground,
     },
     footer: {
       flexDirection: 'row',
-      justifyContent: 'space-around',
+      justifyContent: 'space-evenly', // Space Evenly for 3+ buttons
       alignItems: 'center',
       paddingHorizontal: 12,
-      paddingBottom: 12,
-      paddingTop: 6,
+      paddingBottom: 16,
+      paddingTop: 8,
+      borderTopWidth: 1,
+      borderColor: theme.colors.border + '80'
     },
-    actionButton: {
-      borderWidth: 1.5, // Adjusted border
-      width: 56, // Adjusted size
+    actionButton: { // Base style for icon buttons
+      borderWidth: 1.5, 
+      width: 56, 
       height: 56,
       borderRadius: 28,
       justifyContent: 'center',
       alignItems: 'center',
     },
-    vibeButton: { // GradientButtonNative style prop
-        width: 60, // Adjusted size
-        height: 60,
-        borderRadius: 30,
-        paddingVertical:0,
-        paddingHorizontal:0
+    skipButton: {
+      borderColor: theme.colors.destructive + 'CC',
+    },
+    vibeButtonWrapper: { // To handle GradientButtonNative style prop
+        // No specific style, GradientButtonNative takes care of it
+    },
+    saveButton: {
+        borderColor: theme.colors.secondary + 'CC',
+    },
+    // Placeholder: Note about secondary images
+    secondaryImagesNote: {
+        fontSize: 10,
+        fontFamily: 'Inter-Regular',
+        color: theme.colors.mutedForeground,
+        textAlign: 'center',
+        paddingBottom: 4,
     }
   });
 
   return (
-    <TouchableOpacity onPress={handleCardPress} activeOpacity={onPress ? 0.7 : 1}>
-        <View style={[styles.card, containerStyle]}>
+    <TouchableOpacity onPress={handleCardPress} activeOpacity={onPress ? 0.8 : 1} style={containerStyle}>
+        <View style={styles.card}>
         <View style={styles.imageContainer}>
             <Image
             source={{ uri: person.imageUrl }}
@@ -162,50 +244,90 @@ export const PersonCardNative: React.FC<PersonCardProps> = ({ person, onVibe, on
             resizeMode="cover"
             data-ai-hint="person portrait lifestyle"
             />
+            {person.isVerified && (
+                <View style={styles.verifiedBadge}>
+                    <Feather name="check" size={12} color={theme.colors.primaryForeground} />
+                </View>
+            )}
+             <TouchableOpacity style={styles.moreOptionsButton} onPress={handleMoreOptions}>
+                <Feather name="more-vertical" size={20} color={theme.colors.primaryForeground} />
+            </TouchableOpacity>
             <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.2)', 'rgba(0,0,0,0.8)']}
-            style={styles.gradientOverlay}
+                colors={['transparent', 'rgba(0,0,0,0.1)', 'rgba(0,0,0,0.8)']}
+                style={styles.gradientOverlay}
             >
-            <Text style={styles.nameAgeText}>{person.name}, {person.age}</Text>
-            {person.distance && <Text style={styles.distanceText}>{person.distance}</Text>}
+                <Text style={styles.nameAgeText}>{person.name}{person.age ? `, ${person.age}` : ''}</Text>
+                {person.pronouns && <Text style={styles.pronounsText}>{person.pronouns}</Text>}
+                {person.distance && <Text style={styles.distanceText}>{person.distance}</Text>}
             </LinearGradient>
         </View>
         
         <View style={styles.content}>
             <Text style={styles.bioText} numberOfLines={2}>{person.bio}</Text>
-            <View style={styles.interestsContainer}>
-            {person.interests.slice(0, 2).map(interest => ( // Show fewer interests for compactness
-                <View key={interest} style={styles.badge}>
-                <Text style={styles.badgeText}>{interest}</Text>
+            
+            {person.interests && person.interests.length > 0 && (
+                <View style={styles.tagsContainer}>
+                {person.interests.slice(0, 3).map(interest => ( 
+                    <View key={interest} style={styles.interestBadge}>
+                    <Text style={styles.interestBadgeText}>{interest}</Text>
+                    </View>
+                ))}
                 </View>
-            ))}
-            </View>
-            {person.commonEvents && person.commonEvents > 0 && (
-            <View style={styles.commonEventsContainer}>
-                <Feather name="zap" size={12} color={theme.colors.accent} />
-                <Text style={styles.commonEventsText}>{person.commonEvents} event(s) in common</Text>
-            </View>
             )}
+
+            {person.vibeTags && person.vibeTags.length > 0 && (
+                <View style={styles.tagsContainer}>
+                {person.vibeTags.slice(0, 3).map(tag => (
+                    <View key={tag} style={styles.vibeTagBadge}>
+                    <Text style={styles.vibeTagText}>{tag}</Text>
+                    </View>
+                ))}
+                </View>
+            )}
+            
+            {sharedEventTitles.length > 0 && (
+                <View style={styles.sharedEventsContainer}>
+                    <Text style={styles.sharedEventsTitle}>Attending:</Text>
+                    {sharedEventTitles.slice(0,2).map(title => (
+                        <Text key={title} style={styles.sharedEventText} numberOfLines={1}>🎉 {title}</Text>
+                    ))}
+                </View>
+            )}
+             {person.secondaryImageUrls && person.secondaryImageUrls.length > 0 && (
+                 <Text style={styles.secondaryImagesNote}>(+{person.secondaryImageUrls.length} more photos)</Text>
+             )}
         </View>
 
-        {onVibe && onSkip && ( // Only show buttons if handlers are provided (for swipe view)
+        {/* Footer with action buttons, visible in swipe view context */}
+        {onVibe && onSkip && onSaveForLater && (
             <View style={styles.footer}>
-            <TouchableOpacity
-                style={[styles.actionButton, { borderColor: theme.colors.destructive + '80' }]}
-                onPress={() => onSkip(person.id)}
-                aria-label="Skip"
-            >
-                <Feather name="x" size={26} color={theme.colors.destructive} />
-            </TouchableOpacity>
-            
-            <GradientButtonNative
-                onPress={() => onVibe(person.id)}
-                style={styles.vibeButton}
-                icon={<Feather name="heart" size={26} color={theme.colors.primaryForeground} />}
-            />
+                <TouchableOpacity
+                    style={[styles.actionButton, styles.skipButton]}
+                    onPress={() => onSkip(person.id)}
+                    aria-label="Skip"
+                >
+                    <Feather name="x" size={28} color={theme.colors.destructive} />
+                </TouchableOpacity>
+                
+                <View style={styles.vibeButtonWrapper}>
+                    <GradientButtonNative
+                        onPress={() => onVibe(person.id)}
+                        style={[styles.actionButton, {width: 70, height: 70, borderRadius: 35, borderWidth: 0}]} // Larger main button
+                        icon={<Feather name="heart" size={32} color={theme.colors.primaryForeground} />}
+                    />
+                </View>
+
+                <TouchableOpacity
+                    style={[styles.actionButton, styles.saveButton]}
+                    onPress={() => onSaveForLater(person.id)}
+                    aria-label="Save for Later"
+                >
+                    <Feather name="bookmark" size={24} color={theme.colors.secondary} />
+                </TouchableOpacity>
             </View>
         )}
         </View>
     </TouchableOpacity>
   );
 };
+
