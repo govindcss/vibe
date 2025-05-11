@@ -1,15 +1,24 @@
 
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, ScrollView, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 import { useTheme } from '../../contexts/ThemeContext';
 import HeaderNative from '../../components/layout/HeaderNative';
 import { EventFormNative } from '../../components/events/EventFormNative'; // Native EventForm
-import { MainTabParamList } from '../../navigation/MainAppNavigator'; // Adjust if needed
+import { AppStackParamList, CreateEventStackParamList } from '../../navigation/MainAppNavigator'; 
 import { useToast } from '../../contexts/ToastContext';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { MainTabParamList } from '../../navigation/MainAppNavigator';
 
-type CreateEventScreenNavigationProp = StackNavigationProp<MainTabParamList, 'CreateEventTab'>; // Or a dedicated modal stack
+
+// Props for CreateEventScreen when used in a modal stack nested in a tab navigator
+type CreateEventScreenNavigationProp = CompositeScreenProps<
+  StackNavigationProp<CreateEventStackParamList, 'CreateEventForm'>, // Primary navigation type for this screen
+  BottomTabScreenProps<MainTabParamList> // If it can also access tab navigator context
+>;
+
 
 interface Props {
   navigation: CreateEventScreenNavigationProp;
@@ -23,6 +32,7 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
   const handleCreateEvent = async (data: any) => {
     setIsLoading(true);
     console.log("Creating event:", data);
+    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     showToast({
@@ -31,10 +41,21 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
       type: "success",
     });
     setIsLoading(false);
-    if (navigation.canGoBack()) {
-      navigation.goBack(); // If it's a modal
+    
+    // Navigate back or to the events list
+    // Assuming this screen is part of the 'CreateEventModal' stack defined in AppStack.Navigator
+    const parentNavigator = navigation.getParent();
+    if (parentNavigator && parentNavigator.canGoBack()) {
+        parentNavigator.goBack(); // Closes the modal stack
+    } else if (navigation.canGoBack()) {
+        navigation.goBack(); // Fallback if not in a modal stack or structure is different
     } else {
-      navigation.navigate('Events'); // Or navigate to events list
+      // Fallback if no goBack is possible (e.g., if it was the initial route in its stack)
+      // Try to navigate to Events tab via MainTabs
+      const mainTabsNavigator = navigation.getParent()?.getParent(); // Grandparent might be AppStack
+       if(mainTabsNavigator && typeof (mainTabsNavigator as any).navigate === 'function') {
+         (mainTabsNavigator as StackNavigationProp<AppStackParamList>).navigate('MainTabs', { screen: 'Events' });
+       }
     }
   };
 
@@ -42,6 +63,9 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
+    },
+    keyboardAvoidingView: {
+      flex: 1,
     },
     scrollContainer: {
       padding: 16,
@@ -56,17 +80,23 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
   });
 
   return (
-    <View style={styles.container}>
-      <HeaderNative title="Create New Event" showBackButton={navigation.canGoBack()} />
-      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-        <EventFormNative onSubmit={handleCreateEvent} isLoading={isLoading} />
-      </ScrollView>
-      {isLoading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+    <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoidingView}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0} 
+    >
+        <View style={styles.container}>
+        <HeaderNative title="Create New Event" showBackButton={navigation.canGoBack()} onBackPress={() => navigation.goBack()}/>
+        <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+            <EventFormNative onSubmit={handleCreateEvent} isLoading={isLoading} />
+        </ScrollView>
+        {isLoading && (
+            <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            </View>
+        )}
         </View>
-      )}
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

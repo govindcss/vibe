@@ -1,19 +1,20 @@
 
-import React from 'react';
-import { View, Text, TextInput, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, Platform } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { GradientButtonNative } from '../shared/GradientButtonNative';
-// For date/time picker, you'd typically use @react-native-community/datetimepicker
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { format } from 'date-fns';
 
 const eventFormSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters.").max(100),
   description: z.string().min(10, "Description must be at least 10 characters.").max(1000),
-  date: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date format."), // Should be handled by a date picker
-  time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format (HH:MM)."), // Should be handled by a time picker
+  date: z.string().refine((dateStr) => !isNaN(Date.parse(dateStr)), "Invalid date format."),
+  time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format (HH:MM)."),
   location: z.string().min(5, "Location must be at least 5 characters.").max(200),
   category: z.string().min(2, "Category is required.").max(50),
   tags: z.string().optional(),
@@ -31,37 +32,55 @@ interface EventFormProps {
 
 export const EventFormNative: React.FC<EventFormProps> = ({ onSubmit, defaultValues, isLoading }) => {
   const { theme } = useTheme();
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  
+  // Use a separate state for the Date objects from pickers
+  const [selectedDateObj, setSelectedDateObj] = useState<Date>(
+    defaultValues?.date ? new Date(defaultValues.date + (defaultValues.time ? `T${defaultValues.time}` : '')) : new Date()
+  );
+
   const { control, handleSubmit, formState: { errors }, setValue, watch } = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
       isPrivate: false,
-      date: defaultValues?.date ? new Date(defaultValues.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-      time: defaultValues?.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
-      ...defaultValues,
+      date: defaultValues?.date ? format(new Date(defaultValues.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+      time: defaultValues?.time || format(new Date(), 'HH:mm'),
+      title: defaultValues?.title || '',
+      description: defaultValues?.description || '',
+      location: defaultValues?.location || '',
+      category: defaultValues?.category || '',
+      tags: defaultValues?.tags || '',
+      imageUrl: defaultValues?.imageUrl || '',
     },
   });
 
-  // For date/time pickers, you'd have state to control their visibility
-  // const [showDatePicker, setShowTimePicker] = useState(false);
+  const onDateChange = (event: DateTimePickerEvent, newSelectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (newSelectedDate) {
+      setSelectedDateObj(newSelectedDate);
+      setValue('date', format(newSelectedDate, 'yyyy-MM-dd'));
+    }
+  };
 
-  // const onDateChange = (event: any, selectedDate?: Date) => {
-  //   setShowDatePicker(false);
-  //   if (selectedDate) {
-  //     setValue('date', selectedDate.toISOString().split('T')[0]);
-  //   }
-  // };
-  // const onTimeChange = (event: any, selectedTime?: Date) => {
-  //   setShowTimePicker(false);
-  //   if (selectedTime) {
-  //     setValue('time', selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
-  //   }
-  // };
+  const onTimeChange = (event: DateTimePickerEvent, newSelectedTime?: Date) => {
+    setShowTimePicker(false);
+    if (newSelectedTime) {
+      // Preserve the date part from selectedDateObj, only update time
+      const updatedDateTime = new Date(selectedDateObj);
+      updatedDateTime.setHours(newSelectedTime.getHours());
+      updatedDateTime.setMinutes(newSelectedTime.getMinutes());
+      setSelectedDateObj(updatedDateTime);
+      setValue('time', format(updatedDateTime, 'HH:mm'));
+    }
+  };
   
   const watchedDate = watch('date');
   const watchedTime = watch('time');
 
   function handleFormSubmit(data: EventFormValues) {
-    const combinedDateTime = `${data.date}T${data.time}:00Z`; // Combine date and time
+    // The date and time are already strings in the correct format for combination
+    const combinedDateTime = `${data.date}T${data.time}:00Z`; // Assuming local time needs to be ISO with Z offset
     onSubmit({ ...data, date: combinedDateTime });
   }
   
@@ -73,7 +92,7 @@ export const EventFormNative: React.FC<EventFormProps> = ({ onSubmit, defaultVal
     input: {
       backgroundColor: theme.colors.input, color: theme.colors.foreground, borderWidth: 1,
       borderColor: theme.colors.border, borderRadius: theme.radius, paddingHorizontal: 16,
-      paddingVertical: 12, fontSize: 16, fontFamily: 'Inter-Regular',
+      paddingVertical: Platform.OS === 'ios' ? 14 : 12, fontSize: 16, fontFamily: 'Inter-Regular',
     },
     textArea: { minHeight: 100, textAlignVertical: 'top' },
     inputError: { borderColor: theme.colors.destructive },
@@ -88,14 +107,13 @@ export const EventFormNative: React.FC<EventFormProps> = ({ onSubmit, defaultVal
     },
     switchLabelContainer: { flex: 1, marginRight: 16 },
     switchLabel: { fontSize: 16, fontFamily: 'Inter-SemiBold', color: theme.colors.foreground },
-    // Styles for DateTimePicker if used
     dateTimePickerButton: {
         backgroundColor: theme.colors.input,
         borderWidth: 1,
         borderColor: theme.colors.border,
         borderRadius: theme.radius,
         paddingHorizontal: 16,
-        paddingVertical: 14,
+        paddingVertical: Platform.OS === 'ios' ? 14 : 12,
         alignItems: 'center',
     },
     dateTimePickerText: {
@@ -130,20 +148,33 @@ export const EventFormNative: React.FC<EventFormProps> = ({ onSubmit, defaultVal
       <View style={styles.dateTimeRow}>
           <View style={[styles.fieldContainer, styles.dateTimeInputContainer]}>
               <View style={styles.labelContainer}><Feather name="calendar" size={20} color={theme.colors.primary} /><Text style={styles.label}>Date</Text></View>
-              {/* Replace with actual DateTimePicker */}
-              <TouchableOpacity style={styles.dateTimePickerButton} onPress={() => {/* setShowDatePicker(true) */}}>
-                  <Text style={styles.dateTimePickerText}>{watchedDate || "Select Date"}</Text>
+              <TouchableOpacity style={styles.dateTimePickerButton} onPress={() => setShowDatePicker(true)}>
+                  <Text style={styles.dateTimePickerText}>{watchedDate ? format(new Date(watchedDate), 'PPP') : "Select Date"}</Text>
               </TouchableOpacity>
-              {/* {showDatePicker && <DateTimePicker mode="date" value={new Date(watchedDate)} onChange={onDateChange} />} */}
+              {showDatePicker && (
+                <DateTimePicker
+                  value={selectedDateObj}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={onDateChange}
+                />
+              )}
               {errors.date && <Text style={styles.errorMessage}>{errors.date.message}</Text>}
           </View>
           <View style={[styles.fieldContainer, styles.dateTimeInputContainer]}>
               <View style={styles.labelContainer}><Feather name="clock" size={20} color={theme.colors.primary} /><Text style={styles.label}>Time</Text></View>
-              {/* Replace with actual DateTimePicker */}
-              <TouchableOpacity style={styles.dateTimePickerButton} onPress={() => {/* setShowTimePicker(true) */}}>
+              <TouchableOpacity style={styles.dateTimePickerButton} onPress={() => setShowTimePicker(true)}>
                   <Text style={styles.dateTimePickerText}>{watchedTime || "Select Time"}</Text>
               </TouchableOpacity>
-              {/* {showTimePicker && <DateTimePicker mode="time" value={new Date(`1970-01-01T${watchedTime}`)} onChange={onTimeChange} is24Hour />} */}
+              {showTimePicker && (
+                <DateTimePicker
+                  value={selectedDateObj} // Use selectedDateObj to initialize time picker correctly
+                  mode="time"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={onTimeChange}
+                  is24Hour={true} // Use 24-hour format
+                />
+              )}
               {errors.time && <Text style={styles.errorMessage}>{errors.time.message}</Text>}
           </View>
       </View>
@@ -172,7 +203,7 @@ export const EventFormNative: React.FC<EventFormProps> = ({ onSubmit, defaultVal
       <View style={styles.fieldContainer}>
         <View style={styles.labelContainer}><Feather name="tag" size={20} color={theme.colors.primary} /><Text style={styles.label}>Tags (optional)</Text></View>
         <Controller control={control} name="tags" render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput style={styles.input} onBlur={onBlur} onChangeText={onChange} value={value} placeholder="e.g., livemusic, festival (comma-separated)" placeholderTextColor={theme.colors.mutedForeground} />
+            <TextInput style={styles.input} onBlur={onBlur} onChangeText={onChange} value={value || ''} placeholder="e.g., livemusic, festival (comma-separated)" placeholderTextColor={theme.colors.mutedForeground} />
         )}/>
         <Text style={styles.descriptionText}>Add tags to improve discoverability.</Text>
       </View>
@@ -183,7 +214,7 @@ export const EventFormNative: React.FC<EventFormProps> = ({ onSubmit, defaultVal
         <Controller control={control} name="imageUrl" render={({ field: { onChange, onBlur, value } }) => (
             <TextInput style={[styles.input, errors.imageUrl && styles.inputError]} onBlur={onBlur} onChangeText={onChange} value={value || ''} placeholder="https://example.com/image.png" placeholderTextColor={theme.colors.mutedForeground} keyboardType="url" />
         )}/>
-         <Text style={styles.descriptionText}>A captivating image can attract more attendees.</Text>
+         <Text style={styles.descriptionText}>A captivating image can attract more attendees. Actual image upload coming soon!</Text>
         {errors.imageUrl && <Text style={styles.errorMessage}>{errors.imageUrl.message}</Text>}
       </View>
 
@@ -206,7 +237,7 @@ export const EventFormNative: React.FC<EventFormProps> = ({ onSubmit, defaultVal
         )}/>
       </View>
 
-      <GradientButtonNative onPress={handleSubmit(handleFormSubmit)} disabled={isLoading} title={isLoading ? "Submitting..." : (defaultValues ? "Update Event" : "Create Event")} style={{marginTop: 20}} />
+      <GradientButtonNative onPress={handleSubmit(handleFormSubmit)} disabled={isLoading} title={isLoading ? "Submitting..." : (defaultValues?.title ? "Update Event" : "Create Event")} style={{marginTop: 20}} />
     </View>
   );
 };
