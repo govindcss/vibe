@@ -24,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head />
-      <body className={`${inter.variable} font-sans antialiased bg-background text-foreground`}>
+      <body className={`${inter.variable} font-sans antialiased bg-background text-foreground`} suppressHydrationWarning={true}>
         <div className="flex flex-col min-h-screen">
           <main className="flex-grow pb-20 md:pb-0">
             {children}
@@ -36,3 +36,4 @@ export default function RootLayout({
     </html>
   );
 }
+
