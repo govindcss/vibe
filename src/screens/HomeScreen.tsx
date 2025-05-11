@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { StackNavigationProp } from '@react-navigation/stack';
 
@@ -11,10 +11,18 @@ import { MainTabParamList } from '../navigation/MainAppNavigator';
 import HeaderNative from '../components/layout/HeaderNative';
 
 const featuredEvents: Event[] = [
-  { id: '1', title: 'Neon Nights Fest', date: '2024-08-15', location: 'Downtown Plaza', category: 'Music', imageUrl: 'https://picsum.photos/seed/neonfest/600/400', description: 'Experience the ultimate music festival with glowing lights and electrifying beats.' },
-  { id: '2', title: 'Tech Meetup Wave', date: '2024-08-20', location: 'Innovation Hub', category: 'Tech', imageUrl: 'https://picsum.photos/seed/techmeetup/600/400', description: 'Connect with tech enthusiasts and innovators in your city.' },
-  { id: '3', title: 'Wellness Weekend', date: '2024-08-25', location: 'Serene Park', category: 'Wellness', imageUrl: 'https://picsum.photos/seed/wellness/600/400', description: 'Recharge your mind and body with our wellness retreat activities.' },
+  { id: '1', title: 'Neon Nights Fest', date: '2024-08-15T20:00:00Z', location: 'Downtown Plaza', category: 'Music', imageUrl: 'https://picsum.photos/seed/neonfest/600/400', description: 'Experience the ultimate music festival with glowing lights and electrifying beats.' },
+  { id: '2', title: 'Tech Meetup Wave', date: '2024-08-20T18:30:00Z', location: 'Innovation Hub', category: 'Tech', imageUrl: 'https://picsum.photos/seed/techmeetup/600/400', description: 'Connect with tech enthusiasts and innovators in your city.' },
+  { id: '3', title: 'Wellness Weekend', date: '2024-08-25T10:00:00Z', location: 'Serene Park', category: 'Wellness', imageUrl: 'https://picsum.photos/seed/wellness/600/400', description: 'Recharge your mind and body with our wellness retreat activities.' },
 ];
+
+const promotedItems = [
+  { id: 'promo1', title: 'VibeWave Launch Party!', imageUrl: 'https://picsum.photos/seed/launchparty/700/350', dataAiHint: "party event", description: 'Join us for the official launch!' },
+  { id: 'promo2', title: 'Featured Artist: DJ Neon', imageUrl: 'https://picsum.photos/seed/djneon/700/350', dataAiHint: "dj concert", description: 'Catch DJ Neon live this weekend.' },
+  { id: 'promo3', title: 'Early Bird: Summer Fest', imageUrl: 'https://picsum.photos/seed/summerfestpromo/700/350', dataAiHint: "festival summer", description: 'Get your tickets now!' },
+];
+
+const screenWidth = Dimensions.get('window').width;
 
 type HomeScreenNavigationProp = StackNavigationProp<MainTabParamList, 'Home'>;
 
@@ -33,17 +41,16 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     scrollViewContent: {
       paddingBottom: 20, // For content below the fold
     },
-    headerContainer: {
+    heroSection: {
       alignItems: 'center',
       paddingHorizontal: 16,
-      paddingTop: 40, // Adjust for status bar
+      paddingTop: 20, 
       paddingBottom: 24,
-      // backgroundColor: theme.colors.card, // Optional: for distinct header area
     },
-    appName: {
+    appName: { // Kept if needed, but HeaderNative handles title
       fontSize: 36,
       fontFamily: 'Inter-Bold',
-      color: theme.colors.primary, // Simplified, gradient text is complex in RN
+      color: theme.colors.primary,
       marginBottom: 8,
     },
     tagline: {
@@ -58,14 +65,14 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       color: theme.colors.primary,
       fontFamily: 'Inter-SemiBold',
     },
-    buttonContainer: {
+    heroButtonContainer: {
       flexDirection: 'row',
       justifyContent: 'center',
       gap: 16,
       width: '100%',
       paddingHorizontal: 16,
     },
-    buttonStyle: {
+    heroButtonStyle: {
       flex: 1,
       paddingVertical: 16,
     },
@@ -82,16 +89,51 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       marginVertical: 24,
     },
     sectionTitle: {
-      fontSize: 24,
+      fontSize: 22,
       fontFamily: 'Inter-Bold',
-      color: theme.colors.secondary, // Example: glowing-text-secondary
+      color: theme.colors.foreground, // Changed from secondary for better contrast
       marginBottom: 16,
     },
     eventGrid: {
-      // For a true grid, you might use FlatList with numColumns or map View items.
-      // This is a simple vertical list for now.
+      // Vertical list for now
     },
-    whySection: {
+    bannerSection: {
+      marginVertical: 24,
+    },
+    carouselContainer: {
+      paddingHorizontal: 16,
+      gap: 16,
+    },
+    bannerItem: {
+      width: screenWidth * 0.8, // 80% of screen width
+      height: screenWidth * 0.8 * (9/16), // Maintain 16:9 aspect ratio
+      borderRadius: theme.radius,
+      overflow: 'hidden',
+      backgroundColor: theme.colors.card,
+       elevation: 3,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+    },
+    bannerImage: {
+      width: '100%',
+      height: '100%',
+    },
+    bannerTextContainer: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      padding: 10,
+    },
+    bannerTitle: {
+      color: theme.colors.primaryForeground,
+      fontSize: 16,
+      fontFamily: 'Inter-Bold',
+    },
+     whySection: {
       backgroundColor: theme.colors.card,
       borderRadius: theme.radius,
       padding: 24,
@@ -124,38 +166,59 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     <View style={styles.container}>
       <HeaderNative title="VibeWave" />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <View style={styles.headerContainer}>
-          {/* VibeWave Logo/Text */}
-          {/* <Text style={styles.appName}>VibeWave</Text> */}
+        <View style={styles.heroSection}>
           <Text style={styles.tagline}>
             Discover events, connect with people, and ride the <Text style={styles.taglineHighlight}>vibe</Text>.
           </Text>
-          <View style={styles.buttonContainer}>
+          <View style={styles.heroButtonContainer}>
             <GradientButtonNative
               title="Explore Events"
               onPress={() => navigation.navigate('Events')}
-              style={styles.buttonStyle}
+              style={styles.heroButtonStyle}
+              icon={<Feather name="search" size={16} color={theme.colors.primaryForeground} />}
             />
              <TouchableOpacity
-              style={[styles.buttonStyle, styles.outlineButton, { borderRadius: theme.radius }]}
+              style={[styles.heroButtonStyle, styles.outlineButton, { borderRadius: theme.radius, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }]}
               onPress={() => navigation.navigate('Auth', { screen: 'Signup' } as any)} // Navigate to Auth stack, then Signup
             >
-              <Text style={[styles.outlineButtonText, {fontFamily: 'Inter-SemiBold', fontSize: 16}]}>Join the Wave</Text>
+              <Feather name="user-plus" size={16} color={theme.colors.primary} style={{marginRight: 8}}/>
+              <Text style={[styles.outlineButtonText, {fontFamily: 'Inter-SemiBold', fontSize: 16}]}>Join Wave</Text>
             </TouchableOpacity>
           </View>
         </View>
 
+        {/* Banner Carousel Section */}
+        <View style={styles.bannerSection}>
+          <Text style={[styles.sectionTitle, {paddingHorizontal: 16}]}>Don't Miss Out!</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselContainer}>
+            {promotedItems.map(item => (
+              <TouchableOpacity key={item.id} style={styles.bannerItem} onPress={() => console.log('Banner pressed:', item.id)}>
+                <Image source={{ uri: item.imageUrl }} style={styles.bannerImage} data-ai-hint={item.dataAiHint}/>
+                <View style={styles.bannerTextContainer}>
+                  <Text style={styles.bannerTitle} numberOfLines={1}>{item.title}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>What's Happening?</Text>
+          <Text style={styles.sectionTitle}>What's Happening Nearby?</Text>
           <View style={styles.eventGrid}>
             {featuredEvents.map(event => (
               <EventCardNative key={event.id} event={event} navigation={navigation as any} />
             ))}
           </View>
+           <GradientButtonNative
+              title="See All Events"
+              onPress={() => navigation.navigate('Events')}
+              style={{marginTop: 20}}
+              icon={<Feather name="arrow-right-circle" size={18} color={theme.colors.primaryForeground} />}
+            />
         </View>
 
         <View style={styles.whySection}>
-          <Text style={[styles.sectionTitle, {color: theme.colors.accent}]}>Why VibeWave?</Text>
+          <Text style={[styles.sectionTitle, {color: theme.colors.accent, textAlign: 'center'}]}>Why VibeWave?</Text>
           <View style={styles.whyItem}>
             <Feather name="music" size={40} color={theme.colors.primary} style={styles.whyIcon} />
             <Text style={styles.whyItemTitle}>Discover Events</Text>
