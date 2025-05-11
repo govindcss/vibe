@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Platform, Switch } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { StackNavigationProp } from '@react-navigation/stack';
 
@@ -10,11 +10,13 @@ import { EventCardNative } from '../../components/events/EventCardNative';
 import { GradientButtonNative } from '../../components/shared/GradientButtonNative';
 import { AppStackParamList } from '../../navigation/MainAppNavigator';
 import { Event } from '../../data/events'; // Import centralized Event type
+import { useToast } from '../../contexts/ToastContext';
 
 // Dummy user data
 const userProfile = {
   name: 'Alex Wave Rider',
   username: '@alexwave',
+  pronouns: 'they/them', // Added pronouns
   bio: 'Digital nomad exploring the world one vibe at a time. Music lover, tech enthusiast, and aspiring photographer. Let\'s connect!',
   location: 'Global',
   interests: ['Live Music', 'Tech Meetups', 'Photography', 'Travel', 'Food Festivals'],
@@ -42,6 +44,8 @@ interface Props {
 
 const ProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { theme } = useTheme();
+  const { showToast } = useToast();
+  const [isProfilePublic, setIsProfilePublic] = useState(true);
 
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.colors.background },
@@ -63,7 +67,8 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     editProfileButtonText: { color: theme.colors.primary, fontFamily: 'Inter-SemiBold', fontSize: 12 },
     userInfoContainer: { paddingTop: 56, paddingHorizontal: 16, paddingBottom: 24 },
     name: { fontSize: 26, fontFamily: 'Inter-Bold', color: theme.colors.foreground },
-    username: { fontSize: 16, fontFamily: 'Inter-Regular', color: theme.colors.mutedForeground, marginBottom: 4 },
+    username: { fontSize: 16, fontFamily: 'Inter-Regular', color: theme.colors.mutedForeground, marginBottom: 2 },
+    pronouns: { fontSize: 14, fontFamily: 'Inter-Regular', color: theme.colors.secondary, marginBottom: 8, fontStyle: 'italic' },
     locationContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
     locationText: { fontSize: 14, fontFamily: 'Inter-Regular', color: theme.colors.mutedForeground, marginLeft: 4 },
     bio: { fontSize: 15, fontFamily: 'Inter-Regular', color: theme.colors.foreground, lineHeight: 22, marginBottom: 16 },
@@ -87,6 +92,25 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
     actionButtonText: { color: theme.colors.foreground, fontFamily: 'Inter-SemiBold', fontSize: 16, marginLeft: 8 },
     logoutButton: { backgroundColor: theme.colors.destructive + 'CC' }, // Destructive with opacity
     logoutButtonText: { color: theme.colors.destructiveForeground },
+    privacySettingItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.colors.border + '80',
+    },
+    privacySettingText: {
+        fontSize: 16,
+        fontFamily: 'Inter-Regular',
+        color: theme.colors.foreground,
+    },
+    privacySettingDescription: {
+        fontSize: 12,
+        fontFamily: 'Inter-Regular',
+        color: theme.colors.mutedForeground,
+        marginTop: 2,
+    }
   });
 
   return (
@@ -94,7 +118,7 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       <HeaderNative
         title="My Profile"
         actions={
-          <TouchableOpacity onPress={() => console.log('Settings')} style={{ padding: 8 }}>
+          <TouchableOpacity onPress={() => showToast({message: "Settings coming soon!"})} style={{ padding: 8 }}>
             <Feather name="settings" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
         }
@@ -109,7 +133,7 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.editProfileButtonContainer}>
             <GradientButtonNative 
                 title="Edit Profile" 
-                onPress={() => console.log("Edit Profile")} 
+                onPress={() => showToast({message: "Edit Profile screen coming soon!"})} 
                 icon={<Feather name="edit-2" size={14} color={theme.colors.primary} />}
                 style={styles.editProfileButton}
                 textStyle={styles.editProfileButtonText}
@@ -120,6 +144,7 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.userInfoContainer}>
           <Text style={styles.name}>{userProfile.name}</Text>
           <Text style={styles.username}>{userProfile.username}</Text>
+          <Text style={styles.pronouns}>{userProfile.pronouns}</Text>
           <View style={styles.locationContainer}>
             <Feather name="map-pin" size={14} color={theme.colors.secondary} />
             <Text style={styles.locationText}>{userProfile.location}</Text>
@@ -143,25 +168,49 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
         </View>
         
         <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}><Feather name="calendar" size={22} color={theme.colors.primary} /><Text style={styles.sectionTitle}>Joined Events</Text></View>
+          <View style={styles.sectionHeader}><Feather name="eye" size={22} color={theme.colors.primary} /><Text style={styles.sectionTitle}>Privacy Settings</Text></View>
+          <View style={styles.privacySettingItem}>
+            <View>
+                <Text style={styles.privacySettingText}>Public Profile Visibility</Text>
+                <Text style={styles.privacySettingDescription}>Allow anyone to find and view your profile.</Text>
+            </View>
+            <Switch
+                trackColor={{ false: theme.colors.muted, true: theme.colors.primary }}
+                thumbColor={isProfilePublic ? theme.colors.primaryForeground : theme.colors.mutedForeground}
+                ios_backgroundColor={theme.colors.muted}
+                onValueChange={setIsProfilePublic}
+                value={isProfilePublic}
+            />
+          </View>
+          <TouchableOpacity style={styles.privacySettingItem} onPress={() => showToast({message: "QR Code sharing coming soon!"})}>
+            <View>
+                <Text style={styles.privacySettingText}>Share Profile via QR Code</Text>
+                <Text style={styles.privacySettingDescription}>Generate a QR code for others to scan.</Text>
+            </View>
+            <Feather name="chevron-right" size={22} color={theme.colors.mutedForeground} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}><Feather name="calendar" size={22} color={theme.colors.secondary} /><Text style={styles.sectionTitle}>Joined Events</Text></View>
           {dummyJoinedEvents.length > 0 ? dummyJoinedEvents.map(event => (
             <EventCardNative key={event.id} event={event} navigation={navigation} />
           )) : <Text style={styles.noEventsText}>You haven't joined any events yet.</Text>}
         </View>
 
         <View style={styles.sectionContainer}>
-           <View style={styles.sectionHeader}><Feather name="heart" size={22} color={theme.colors.secondary} /><Text style={styles.sectionTitle}>Hosted Events</Text></View>
+           <View style={styles.sectionHeader}><Feather name="heart" size={22} color={theme.colors.accent} /><Text style={styles.sectionTitle}>Hosted Events</Text></View>
           {dummyHostedEvents.length > 0 ? dummyHostedEvents.map(event => (
             <EventCardNative key={event.id} event={event} navigation={navigation} />
           )) : <Text style={styles.noEventsText}>You haven't hosted any events yet. <Text style={styles.createText} onPress={() => navigation.navigate('CreateEventModal', { screen: 'CreateEventForm' } )}>Create one now!</Text></Text>}
         </View>
 
         <View style={{paddingHorizontal: 16, paddingBottom: 24, paddingTop: 16}}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => console.log("Moderation")}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => showToast({message: "Moderation & Safety coming soon!"})}>
             <Feather name="shield" size={18} color={theme.colors.foreground} />
             <Text style={styles.actionButtonText}>Moderation & Safety</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionButton, styles.logoutButton]} onPress={() => console.log("Log Out")}>
+          <TouchableOpacity style={[styles.actionButton, styles.logoutButton]} onPress={() => showToast({message: "Logging out...", type:"info"})}>
             <Feather name="log-out" size={18} color={theme.colors.destructiveForeground} />
             <Text style={[styles.actionButtonText, styles.logoutButtonText]}>Log Out</Text>
           </TouchableOpacity>
