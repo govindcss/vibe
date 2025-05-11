@@ -14,6 +14,8 @@ import ProfileScreen from '../screens/profile/ProfileScreen';
 import ChatScreen from '../screens/chat/ChatScreen';
 import EventDetailScreen from '../screens/events/EventDetailScreen';
 import OtherUserProfileScreen from '../screens/profile/OtherUserProfileScreen'; // Import OtherUserProfileScreen
+import NotificationsScreen from '../screens/notifications/NotificationsScreen'; // Import NotificationsScreen
+
 
 import { useTheme } from '../contexts/ThemeContext';
 import { Platform, View, StyleSheet } from 'react-native';
@@ -25,7 +27,7 @@ export type MainTabParamList = {
   CreateEventTab: undefined; 
   People: undefined;
   Profile: undefined;
-  Chat: { userId?: string } | undefined; // Added optional userId for direct messaging
+  Chat: { userId?: string, chatId?: string } | undefined; // Added optional chatId
 };
 
 export type CreateEventStackParamList = {
@@ -36,7 +38,8 @@ export type AppStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   CreateEventModal: NavigatorScreenParams<CreateEventStackParamList>;
   EventDetail: { eventId: string };
-  OtherUserProfile: { personId: string }; // Added OtherUserProfile
+  OtherUserProfile: { personId: string }; 
+  Notifications: undefined; // Added Notifications screen
 };
 
 
@@ -128,6 +131,7 @@ const FinalMainAppNavigator = () => {
       <AppStack.Screen name="CreateEventModal" component={CreateEventModalNavigator} options={{ presentation: 'modal'}} />
       <AppStack.Screen name="EventDetail" component={EventDetailScreen} />
       <AppStack.Screen name="OtherUserProfile" component={OtherUserProfileScreen} />
+      <AppStack.Screen name="Notifications" component={NotificationsScreen} /> 
     </AppStack.Navigator>
   )
 }

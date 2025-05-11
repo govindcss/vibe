@@ -145,8 +145,8 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
       <HeaderNative
         title="My Profile"
         actions={
-          <TouchableOpacity onPress={() => showToast({message: "General app settings coming soon!"})} style={{ padding: 8 }}>
-            <Feather name="settings" size={22} color={theme.colors.primary} />
+          <TouchableOpacity onPress={() => navigation.navigate('Notifications')} style={{ padding: 8 }}>
+            <Feather name="bell" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
         }
       />
@@ -234,10 +234,19 @@ const ProfileScreen: React.FC<Props> = ({ navigation }) => {
             />
           </View>
           
-          {/* Notification Preferences */}
-          <TouchableOpacity style={styles.settingItem} onPress={() => showToast({message: "Notification Preferences coming soon!"})}>
+          {/* All Notifications (Panel) */}
+           <TouchableOpacity style={styles.settingItem} onPress={() => navigation.navigate('Notifications')}>
             <View style={styles.settingItemContent}>
                 <Feather name="bell" size={18} color={theme.colors.foreground} style={styles.settingIcon} />
+                <Text style={styles.settingText}>All Notifications</Text>
+            </View>
+            <Feather name="chevron-right" size={22} color={theme.colors.mutedForeground} />
+          </TouchableOpacity>
+
+          {/* Notification Preferences */}
+          <TouchableOpacity style={styles.settingItem} onPress={() => showToast({message: "Detailed Notification Preferences coming soon!"})}>
+            <View style={styles.settingItemContent}>
+                <Feather name="sliders" size={18} color={theme.colors.foreground} style={styles.settingIcon} />
                 <Text style={styles.settingText}>Notification Preferences</Text>
             </View>
             <Feather name="chevron-right" size={22} color={theme.colors.mutedForeground} />
